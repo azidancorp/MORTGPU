@@ -1,0 +1,28 @@
+{
+  "version": "2026-10-15",
+  "params": {
+    "max_price_pence": 1000000, "rent_rate_bps": 500, "min_deposit_permille": 200,
+    "icr_min_pct": 125, "max_holidays_per_12m": 1, "min_buyback_pence": 50000,
+    "buyback_step_pence": 1000, "supplier_allowlist": ["northwind"]
+  },
+  "clauses": {
+    "1.1": "The next GPU goes to the eligible member with the most credits (savings × days held). Eligible means savings of at least 20% of the asset price. If underwriting fails, the turn passes to the next member.",
+    "1.2": "On their turn, a member's savings convert into their deposit and initial equity at the locked price.",
+    "1.3": "Credits reset to zero when a member takes their turn.",
+    "2.1": "The deposit (converted savings) must be at least 20% of the asset price.",
+    "2.2": "The asset price must not exceed £10,000.",
+    "2.3": "The supplier must be on the allowlist.",
+    "2.4": "Projected monthly inference revenue must be at least 125% of the initial monthly rent (ICR).",
+    "2.5": "The pool must hold enough cash to pay the supplier in full.",
+    "3.1": "Rent is 5% of the locked asset price per month, multiplied by the pool's ownership share.",
+    "3.2": "Each month, metered inference revenue is compared with rent. An ICR below 125% is flagged.",
+    "3.3": "Rent is distributed to members pro rata to their savings, excluding the lessee of that asset.",
+    "4.1": "Enforcement starts only after the final failed payment attempt.",
+    "4.2": "A member may take at most one payment holiday per 12 months, and none after a broken promise.",
+    "4.3": "Unpaid rent is settled by transferring the member's equity to the pool at the locked price, rounded down in the member's favour.",
+    "4.4": "When the member's equity reaches zero, the lease ends, access is revoked and the GPU is re-leased.",
+    "4.5": "Non-recourse: arrears beyond the member's equity are written off. Savings are never touched.",
+    "5.1": "Title transfers to the member at 100% equity with zero arrears.",
+    "5.2": "Buybacks are voluntary, at the locked price, in multiples of £10, at least £500 (or the remaining balance), with no arrears outstanding."
+  }
+}
