@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+*.db
+usage.log
+gpu_state.json
+.cognee_system/
+.data_storage/
+mortgpu-hackathon-battle-plan.md
+NOTES-*.md
+*.db-journal
+.pytest_cache/
