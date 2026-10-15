@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MORTGPU — Theme Sample</title>
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+
+<header class="rim" style="padding: 2em;">
+  <h1 style="margin-top: 0;">MORTGPU <span class="text-green">Theme Sample</span></h1>
+  <p>Charcoal surfaces, hard corners, red &amp; green gradients, Saira type.</p>
+</header>
+
+<main style="max-width: 900px; margin: 0 auto; padding: 1.5em;">
+
+  <h2>Headings</h2>
+  <h1>H1 — charcoal surface, red edge</h1>
+  <h2>H2 — same surface, green edge</h2>
+  <h3>H3 — neutral edge</h3>
+  <h4>H4 — smaller neutral</h4>
+
+  <h2>Text</h2>
+  <p>This is <strong>primary body text</strong> with an <a href="#">inline link</a>,
+  some <em>emphasis</em>, inline <code>code snippet</code>, and
+  <span class="text-red">red highlight</span> / <span class="text-green">green highlight</span>.
+  Secondary text lives in quotes and blockquotes below.</p>
+
+  <blockquote>A blockquote. Green left edge, charcoal surface, secondary text color.</blockquote>
+
+  <h2>Code</h2>
+  <pre><code>__global__ void mort_kernel(float *out, const float *in, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i &lt; n) out[i] = in[i] * 2.0f;
+}</code></pre>
+
+  <h2>Lists</h2>
+  <ul>
+    <li>Unordered item one</li>
+    <li>Unordered item two — red markers</li>
+    <li>Unordered item three</li>
+  </ul>
+  <ol>
+    <li>Ordered item one</li>
+    <li>Ordered item two</li>
+  </ol>
+
+  <h2>Table</h2>
+  <table>
+    <thead>
+      <tr><th>Kernel</th><th>Block size</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>mort_kernel</code></td><td>256</td><td class="text-green">OK</td></tr>
+      <tr><td><code>mort_reduce</code></td><td>128</td><td class="text-green">OK</td></tr>
+      <tr><td><code>mort_sort</code></td><td>512</td><td class="text-red">FAIL</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Buttons &amp; Form</h2>
+  <p>
+    <button>Red action</button>
+    <button class="green">Green action</button>
+  </p>
+  <p>
+    <input type="text" placeholder="Text input — green focus ring">
+    <input type="submit" value="Submit">
+  </p>
+
+  <h2>Callouts</h2>
+  <p class="callout green">Green callout — success, tips, things that work.</p>
+  <p class="callout red">Red callout — warnings, errors, things that bite.</p>
+  <p class="callout">Neutral callout — plain notes.</p>
+
+  <h2>Gradients</h2>
+  <div class="border-grad" style="padding: 1em; margin: 1em 0;">
+    <strong>.border-grad</strong> — charcoal fill, red→green gradient border.
+  </div>
+  <div class="rim" style="background: var(--grad-surface); padding: 1em; margin: 1em 0;">
+    <strong>.rim</strong> — conic red→green sweep across the top edge.
+  </div>
+  <p>The page background is layered: red radial glow top-right, green glow
+  bottom-left, over a red-tinted → charcoal → green-tinted diagonal. The
+  scrollbar thumb, text selection, and the <code>&lt;hr&gt;</code> below are
+  gradient-tinted as well.</p>
+
+  <hr>
+
+  <footer style="padding: 1em 0;">
+    <p class="text-muted">MORTGPU docs — sample page. Edit freely.</p>
+  </footer>
+
+</main>
+
+</body>
+</html>

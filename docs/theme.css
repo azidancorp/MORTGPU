@@ -1,0 +1,302 @@
+/* MORTGPU docs theme — dark charcoal, red/green highlights, hard corners, Saira.
+   Gradient language adapted from the AQL theme: layered radial glows over
+   tinted charcoal, gradient accents, square corners, visible borders. */
+@import url('https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  /* Charcoal backgrounds — every surface gets one */
+  --bg-base: #161616;
+  --bg-surface: #1d1d1d;
+  --bg-raised: #242424;
+  --bg-inset: #101010;
+
+  /* Text — moderately high contrast on charcoal */
+  --text-primary: #e6e6e6;
+  --text-secondary: #b0b0b0;
+  --text-muted: #7d7d7d;
+
+  /* Highlights */
+  --red: #ff4136;
+  --red-bright: #ff6157;
+  --red-dim: #33110f;
+  --green: #34d973;
+  --green-bright: #55ec8f;
+  --green-dim: #0f2416;
+
+  /* Lines */
+  --border: #2e2e2e;
+  --border-strong: #454545;
+
+  --font-family: 'Saira', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  /* Gradients — layered glow over tinted charcoal, AQL-style */
+  --grad-page:
+    radial-gradient(760px 340px at 82% -8%, rgba(255, 65, 54, 0.13) 0%, transparent 58%),
+    radial-gradient(700px 480px at -8% 108%, rgba(52, 217, 115, 0.10) 0%, transparent 55%),
+    linear-gradient(135deg, #1c0d0c 0%, #161616 48%, #0c1710 100%);
+  --grad-surface: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-base) 100%);
+  --grad-raised: linear-gradient(180deg, var(--bg-raised) 0%, var(--bg-surface) 100%);
+  --grad-inset: linear-gradient(180deg, #141414 0%, var(--bg-inset) 100%);
+  --grad-red: linear-gradient(180deg, var(--red-bright) 0%, var(--red) 55%, #d92b21 100%);
+  --grad-red-soft: linear-gradient(90deg, rgba(255, 65, 54, 0.16) 0%, rgba(51, 17, 15, 0.85) 100%);
+  --grad-green: linear-gradient(180deg, var(--green-bright) 0%, var(--green) 55%, #23b357 100%);
+  --grad-green-soft: linear-gradient(90deg, rgba(52, 217, 115, 0.14) 0%, rgba(15, 36, 22, 0.85) 100%);
+  --grad-rim: conic-gradient(from 0deg, transparent 0%, var(--red) 18%, var(--green) 42%, transparent 68%);
+  --grad-scroll: linear-gradient(180deg, rgba(255, 65, 54, 0.72), rgba(52, 217, 115, 0.72));
+}
+
+*, *::before, *::after {
+  border-radius: 0 !important;
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg-base);
+}
+
+body {
+  margin: 0;
+  background: var(--grad-page);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+::selection {
+  background: var(--red);
+  color: #fff;
+}
+
+/* ---------- Typography ---------- */
+h1, h2, h3, h4, h5, h6 {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 55%),
+    var(--grad-surface);
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 1.5em 0 0.5em;
+  padding: 0.35em 0.6em;
+  border-left: 4px solid var(--red);
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background:
+    linear-gradient(90deg, rgba(255, 65, 54, 0.12), transparent 50%),
+    var(--grad-surface);
+}
+
+h2 {
+  font-size: 1.5rem;
+  border-left-color: var(--green);
+  background:
+    linear-gradient(90deg, rgba(52, 217, 115, 0.10), transparent 50%),
+    var(--grad-surface);
+}
+
+h3 { font-size: 1.2rem; border-left-color: var(--border-strong); }
+h4, h5, h6 { font-size: 1rem; border-left-color: var(--border); }
+
+p, li, td, th {
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--green);
+  text-decoration: underline;
+  text-decoration-color: var(--green-dim);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--green-bright);
+  background: var(--green-dim);
+}
+
+strong, b { color: var(--text-primary); font-weight: 700; }
+em, i { color: var(--text-secondary); }
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+}
+
+code, kbd {
+  background: var(--grad-inset);
+  border: 1px solid var(--border);
+  color: var(--red-bright);
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+pre {
+  background: var(--grad-inset);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--red);
+  padding: 1em;
+  overflow-x: auto;
+}
+
+pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--text-primary);
+}
+
+/* ---------- Surfaces ---------- */
+header, footer, nav, aside, section, article {
+  background: var(--grad-surface);
+}
+
+blockquote {
+  background:
+    linear-gradient(90deg, rgba(52, 217, 115, 0.08), transparent 60%),
+    var(--grad-surface);
+  border-left: 4px solid var(--green);
+  margin: 1em 0;
+  padding: 0.75em 1em;
+  color: var(--text-secondary);
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, var(--red), var(--border-strong), var(--green));
+}
+
+/* ---------- Tables ---------- */
+table {
+  background: var(--grad-surface);
+  border: 1px solid var(--border-strong);
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th {
+  background: var(--grad-raised);
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: left;
+}
+
+th, td {
+  border: 1px solid var(--border);
+  padding: 0.5em 0.75em;
+}
+
+tr:nth-child(even) td {
+  background: var(--bg-inset);
+}
+
+/* ---------- Lists ---------- */
+ul, ol {
+  background: var(--grad-surface);
+  border: 1px solid var(--border);
+  padding: 0.75em 0.75em 0.75em 2em;
+}
+
+li::marker {
+  color: var(--red);
+}
+
+/* ---------- Interactive ---------- */
+button, .btn, input[type='submit'] {
+  font-family: var(--font-family);
+  font-weight: 600;
+  background: var(--grad-red);
+  border: 1px solid var(--red-bright);
+  color: #fff;
+  padding: 0.5em 1.25em;
+  cursor: pointer;
+}
+
+button:hover, .btn:hover {
+  background: linear-gradient(180deg, #ff7369 0%, var(--red-bright) 55%, var(--red) 100%);
+  border-color: #ff8a80;
+}
+
+.btn-green, button.green {
+  background: var(--grad-green);
+  border-color: var(--green-bright);
+  color: #08130c;
+}
+
+.btn-green:hover, button.green:hover {
+  background: linear-gradient(180deg, #7ff0a8 0%, var(--green-bright) 55%, var(--green) 100%);
+  border-color: #8ff7b6;
+}
+
+input, select, textarea {
+  font-family: var(--font-family);
+  background: var(--grad-inset);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  padding: 0.5em 0.75em;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--green);
+  outline-offset: -1px;
+}
+
+/* ---------- Callouts ---------- */
+.callout, .note {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 60%),
+    var(--grad-surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--green);
+  padding: 0.75em 1em;
+}
+
+.callout.red, .warning, .danger {
+  border-left-color: var(--red);
+  background: var(--grad-red-soft);
+}
+
+.callout.green, .success, .tip {
+  border-left-color: var(--green);
+  background: var(--grad-green-soft);
+}
+
+/* ---------- Scrollbar (AQL-style gradient thumb) ---------- */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-inset);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid var(--bg-inset);
+  background: var(--grad-scroll);
+}
+
+/* ---------- Gradient utilities ---------- */
+/* Gradient border with solid charcoal fill (padding-box/border-box split) */
+.border-grad {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg-surface), var(--bg-surface)) padding-box,
+    linear-gradient(120deg, var(--red), var(--green)) border-box;
+}
+
+/* Conic red→green sweep along the top edge */
+.rim {
+  border-top: 3px solid;
+  border-image: var(--grad-rim) 1;
+}
+
+/* ---------- Utility ---------- */
+.text-red { color: var(--red); }
+.text-green { color: var(--green); }
+.bg-base { background: var(--bg-base); }
+.bg-surface { background: var(--bg-surface); }
+.bg-raised { background: var(--bg-raised); }
