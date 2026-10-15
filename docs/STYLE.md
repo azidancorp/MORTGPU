@@ -49,8 +49,8 @@ where a surface can carry depth:
    primary buttons, H1 accents. Green = links, success, focus states, H2 accents.
 4. **Moderately high contrast.** Text never goes darker than `--text-muted`
    on charcoal, and pure black/white are avoided.
-5. **Saira for all UI and prose.** Falls back to `Segoe UI`/system sans.
-   Monospace (code) uses JetBrains Mono or Fira Code.
+5. **Saira for all UI and prose.** Falls back to the system sans only if
+   Saira can't load. Monospace (code) uses JetBrains Mono or Fira Code.
 6. **Left-border accents** (4px, red or green) mark headings, quotes, code
    blocks, and callouts.
 7. **Gradients are layered, never loud.** A surface gradient stacks a tinted

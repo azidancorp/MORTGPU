@@ -27,7 +27,7 @@
   --border: #2e2e2e;
   --border-strong: #454545;
 
-  --font-family: 'Saira', 'Segoe UI', system-ui, sans-serif;
+  --font-family: 'Saira', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 
   /* Gradients — layered glow over tinted charcoal, AQL-style */
