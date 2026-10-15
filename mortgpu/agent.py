@@ -300,7 +300,7 @@ def process_usage() -> int:
                           member_id=m and m["id"], lease_id=m and f"L-{m['id'].upper()}")
             ui.step("OBSERVE", "waiting for Stripe to aggregate meter events…")
             ok = billing.wait_for_meter(cus, minutes)
-            ui.step("OBSERVE", f"meter summary {'✓' if ok else 'not yet visible'}: {minutes:,} minutes")
+            ui.step("OBSERVE", f"meter {'summary ✓' if ok else 'events accepted (summary aggregates async)'}: {minutes:,} minutes")
     return total
 
 

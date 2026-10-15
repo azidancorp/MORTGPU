@@ -39,6 +39,13 @@ python -m mortgpu.demo reset                 # delete test clocks, wipe the DB
 | 5 | Ben's "final £500" → 100% → title transferred; the pool's revoke now gets 409 | payoff |
 | 6 | "Why was Carl disconnected?" → answer from memory citing clauses; books balance ✓ | explains every pound |
 
+## How it maps to the judging criteria
+
+- **Works end to end:** every scene creates real Stripe test-mode objects: contribution PaymentIntents, rent subscriptions whose quantity is the pool's ownership share, meter events billed per GPU-minute, test-clock renewals, failed invoices settled out-of-band in equity, and an equity buy-back charge.
+- **Autonomy with control:** no human is in the loop. The LLM proposes, `policy.json` decides, and every ALLOW or BLOCK cites a clause. The gate reads structured facts only, never free text, so a persuasive email can't move money.
+- **Explains every pound:** every Stripe object carries `decision_id`, `policy_clause` and `reason` metadata. Every action is written to the audit ledger, and the books invariant (savings = cash + stakes) is checked at the end.
+- **Cognee:** the agent recalls Carl's broken promise to justify the BLOCK, and answers "why was Carl disconnected?" from memory, citing clauses. Fuzzy memory explains decisions but never decides money.
+
 ## Layout
 
 | File | Role |
