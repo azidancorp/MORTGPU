@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mortGPU — live</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2em; padding: 1.2em; }
+  section { padding: 0.4em 1em 1em; border: 1px solid var(--border); background: var(--grad-surface); min-width: 0; }
+  section.wide { grid-column: 1 / -1; }
+  h1 { margin: 0; }
+  h2 { margin: 0.6em 0; font-size: 1.15rem; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 1em 1.2em; }
+  .stats { display: flex; gap: 1.6em; font-size: 1.05rem; color: var(--text-secondary); }
+  .stats b { color: var(--text-primary); }
+  table { width: 100%; font-size: 0.9rem; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bar { display: flex; height: 0.9em; min-width: 8em; border: 1px solid var(--border-strong); background: var(--bg-inset); }
+  .bar .pool { background: var(--grad-red); }
+  .bar .buyer { background: var(--grad-green); }
+  .ok { color: var(--green); font-weight: 700; }
+  .bad { color: var(--red); font-weight: 700; }
+  .muted { color: var(--text-muted); }
+  .tag { display: inline-block; padding: 0 0.5em; border: 1px solid currentColor; font-size: 0.8rem; font-weight: 600; }
+  .clause { font-family: var(--font-mono); font-size: 0.82rem; }
+  .reason { color: var(--text-secondary); max-width: 46em; }
+  tr.flash td { background: var(--grad-green-soft); }
+</style>
+</head>
+<body>
+<header class="rim">
+  <h1>mort<span class="text-red">GPU</span> <span class="text-green">· live pool</span></h1>
+  <div class="stats">
+    <span>pool cash <b id="cash">—</b></span>
+    <span>books <b id="inv">—</b></span>
+    <span class="muted" id="today"></span>
+  </div>
+</header>
+<main>
+  <section>
+    <h2>Queue</h2>
+    <table><thead><tr><th>#</th><th>member</th><th class="num">credits</th><th class="num">savings</th><th>eligible</th></tr></thead>
+      <tbody id="queue"></tbody></table>
+  </section>
+  <section>
+    <h2>Leases</h2>
+    <table><thead><tr><th>lease</th><th>GPU</th><th>pool / member</th><th class="num">rent</th><th>title</th><th>status</th></tr></thead>
+      <tbody id="leases"></tbody></table>
+  </section>
+  <section class="wide">
+    <h2>Decisions</h2>
+    <table><thead><tr><th>id</th><th>action</th><th>member</th><th>verdict</th><th>clauses</th><th>reason</th></tr></thead>
+      <tbody id="decisions"></tbody></table>
+  </section>
+  <section class="wide">
+    <h2>Ledger</h2>
+    <table><thead><tr><th>#</th><th>kind</th><th>member</th><th class="num">amount</th><th class="num">‰</th><th>clause</th><th>reason</th></tr></thead>
+      <tbody id="ledger"></tbody></table>
+  </section>
+</main>
+<script>
+const money = p => (p < 0 ? '-' : '') + '£' + (Math.abs(p) / 100).toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+let lastLedger = 0;
+
+function render(s) {
+  document.getElementById('cash').textContent = money(s.cash_pence);
+  const inv = document.getElementById('inv');
+  inv.textContent = s.invariant_ok ? 'balance ✓' : 'DO NOT balance ✗';
+  inv.className = s.invariant_ok ? 'ok' : 'bad';
+  document.getElementById('today').textContent = 'as of ' + s.today;
+
+  document.getElementById('queue').innerHTML = s.queue.map((q, i) => `<tr>
+    <td>${i + 1}</td><td>${esc(q.member_id)}</td><td class="num">${q.credits.toLocaleString('en-GB')}</td>
+    <td class="num">${money(q.savings_pence)}</td>
+    <td>${q.eligible ? '<span class="ok">✓</span>' : `<span class="bad">✗</span> <span class="muted">${esc(q.why)}</span>`}</td></tr>`).join('');
+
+  document.getElementById('leases').innerHTML = s.leases.map(l => `<tr>
+    <td>${esc(l.id)}</td><td>${esc(l.gpu_id)}</td>
+    <td><div class="bar" title="pool ${l.pool_pct} / ${esc(l.member_id)} ${l.buyer_pct}">
+      <div class="pool" style="width:${l.pool_permille / 10}%"></div><div class="buyer" style="width:${l.buyer_permille / 10}%"></div></div>
+      <span class="muted">pool ${l.pool_pct} · ${esc(l.member_id)} ${l.buyer_pct}</span></td>
+    <td class="num">${l.status === 'active' ? money(l.rent_pence) : '—'}</td>
+    <td>${esc(l.title_holder ?? '—')}</td>
+    <td><span class="tag ${l.status === 'active' ? 'ok' : l.status === 'repossessed' ? 'bad' : 'ok'}">${esc(l.status)}</span></td></tr>`).join('');
+
+  document.getElementById('decisions').innerHTML = s.decisions.map(d => `<tr>
+    <td class="clause">${esc(d.id)}</td><td>${esc(d.action)}</td><td>${esc(d.member_id)}</td>
+    <td><span class="tag ${d.verdict === 'ALLOW' ? 'ok' : 'bad'}">${esc(d.verdict)}</span></td>
+    <td class="clause">${d.clauses.map(c => `<span class="${c.passed ? 'ok' : 'bad'}">${c.passed ? '✓' : '✗'}§${esc(c.clause)}</span>`).join(' ')}</td>
+    <td class="reason">${esc(d.reason)}</td></tr>`).join('');
+
+  const top = s.ledger.length ? s.ledger[0].id : 0;
+  document.getElementById('ledger').innerHTML = s.ledger.map(r => `<tr class="${r.id > lastLedger && lastLedger ? 'flash' : ''}">
+    <td class="muted">${r.id}</td><td>${esc(r.kind)}</td><td>${esc(r.member_id ?? '')}</td>
+    <td class="num ${r.amount_pence > 0 ? 'ok' : r.amount_pence < 0 ? 'bad' : 'muted'}">${r.amount_pence ? money(r.amount_pence) : ''}</td>
+    <td class="num">${r.permille_delta ? (r.permille_delta > 0 ? '+' : '') + r.permille_delta : ''}</td>
+    <td class="clause">${r.policy_clause ? '§' + esc(r.policy_clause) : ''}</td>
+    <td class="reason">${esc(r.reason)}</td></tr>`).join('');
+  lastLedger = top;
+}
+
+async function poll() {
+  try {
+    const r = await fetch('/api/state');
+    if (r.ok) render(await r.json());
+  } catch (e) { /* server restarting */ }
+}
+poll();
+setInterval(poll, 1500);
+</script>
+</body>
+</html>
