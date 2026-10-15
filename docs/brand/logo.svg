@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Saira:wght@800;900&amp;display=swap');
+    .w{font-family:'Saira',system-ui,sans-serif;font-weight:900;font-size:168px;letter-spacing:-2px}</style>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c0d0c"/><stop offset=".48" stop-color="#161616"/><stop offset="1" stop-color="#0c1710"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff6157"/><stop offset=".55" stop-color="#ff4136"/><stop offset="1" stop-color="#d92b21"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#55ec8f"/><stop offset=".55" stop-color="#34d973"/><stop offset="1" stop-color="#23b357"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff4136"/><stop offset="1" stop-color="#34d973"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="400" fill="url(#bg)"/>
+  <!-- chip mark: hard-cornered die, pins on all sides; half red (pool) / half green (member) -->
+  <g transform="translate(110 110)">
+    <g fill="#454545">
+      <rect x="30" y="-22" width="12" height="22"/><rect x="74" y="-22" width="12" height="22"/><rect x="118" y="-22" width="12" height="22"/>
+      <rect x="30" y="180" width="12" height="22"/><rect x="74" y="180" width="12" height="22"/><rect x="118" y="180" width="12" height="22"/>
+      <rect x="-22" y="30" width="22" height="12"/><rect x="-22" y="84" width="22" height="12"/><rect x="-22" y="138" width="22" height="12"/>
+      <rect x="160" y="30" width="22" height="12"/><rect x="160" y="84" width="22" height="12"/><rect x="160" y="138" width="22" height="12"/>
+    </g>
+    <rect width="160" height="180" fill="#1d1d1d" stroke="#454545" stroke-width="4"/>
+    <rect x="24" y="24" width="56" height="132" fill="url(#red)"/>
+    <rect x="80" y="24" width="56" height="132" fill="url(#green)"/>
+  </g>
+  <text class="w" x="340" y="262"><tspan fill="url(#red)">MORT</tspan><tspan fill="url(#green)">GPU</tspan></text>
+  <rect x="344" y="292" width="760" height="6" fill="url(#rim)"/>
+</svg>
