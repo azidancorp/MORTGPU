@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>MORTGPU: demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Saira"; src: url("assets/fonts/Saira.ttf") format("truetype"); font-weight: 100 900; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/JetBrainsMono-Regular.ttf") format("truetype"); font-weight: 400; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/JetBrainsMono-Medium.ttf") format("truetype"); font-weight: 500; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/JetBrainsMono-Bold.ttf") format("truetype"); font-weight: 700; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/JetBrainsMono-ExtraBold.ttf") format("truetype"); font-weight: 800; }
+
+      :root {
+        --bg-base: #161616; --bg-surface: #1d1d1d; --bg-raised: #242424; --bg-inset: #101010;
+        --text: #e6e6e6; --text-2: #b0b0b0; --muted: #7d7d7d;
+        --red: #ff4136; --red-b: #ff6157; --red-dim: #33110f;
+        --green: #34d973; --green-b: #55ec8f; --green-dim: #0f2416;
+        --border: #2e2e2e; --border-s: #454545;
+        --grad-surface: linear-gradient(180deg, #1d1d1d 0%, #161616 100%);
+        --grad-inset: linear-gradient(180deg, #141414 0%, #101010 100%);
+        --grad-red: linear-gradient(180deg, #ff6157 0%, #ff4136 55%, #d92b21 100%);
+        --grad-green: linear-gradient(180deg, #55ec8f 0%, #34d973 55%, #23b357 100%);
+        --mono: "JetBrains Mono", monospace;
+      }
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; border-radius: 0 !important; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #161616; }
+      body { font-family: "Saira", sans-serif; color: var(--text); }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+      .clip { position: absolute; inset: 0; }
+      .stage { position: absolute; inset: 0; }
+      .abs { position: absolute; }
+      .mono { font-family: var(--mono); }
+      .red { color: var(--red); } .green { color: var(--green); } .muted { color: var(--muted); } .t2 { color: var(--text-2); }
+
+      /* ---------- background ---------- */
+      #bg { background: linear-gradient(135deg, #1c0d0c 0%, #161616 48%, #0c1710 100%); }
+      #bg-grid { position: absolute; left: -120px; top: -120px; width: 2160px; height: 1320px; opacity: 0.55;
+        background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+        background-size: 60px 60px; }
+      .glow { position: absolute; width: 1500px; height: 900px; }
+      #glow-r { left: 900px; top: -420px; background: radial-gradient(closest-side, rgba(255,65,54,0.17), transparent 100%); }
+      #glow-g { left: -520px; top: 520px; background: radial-gradient(closest-side, rgba(52,217,115,0.13), transparent 100%); }
+      #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%); }
+      #redflash { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 220px 40px rgba(255,65,54,0.55); }
+
+      /* ---------- header ---------- */
+      #hdr-logo { position: absolute; left: 80px; top: 44px; display: flex; align-items: center; gap: 16px; }
+      .word { font-weight: 900; letter-spacing: -0.02em; line-height: 1; }
+      .word .m { background: var(--grad-red); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .word .g { background: var(--grad-green); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      #hdr-logo .word { font-size: 36px; }
+      #hdr-test { position: absolute; right: 80px; top: 48px; display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 17px; letter-spacing: 0.12em; color: var(--text-2);
+        padding: 9px 16px; border: 1px solid var(--border-s); background: rgba(16,16,16,0.7); }
+      #hdr-test i { display: block; width: 10px; height: 10px; background: var(--green); box-shadow: 0 0 12px var(--green); }
+      #hdr-rule { position: absolute; left: 80px; right: 80px; top: 112px; height: 1px; background: linear-gradient(90deg, rgba(255,65,54,0.6), #2e2e2e 30%, #2e2e2e 70%, rgba(52,217,115,0.6)); }
+
+      /* ---------- common pieces ---------- */
+      .eyebrow { position: absolute; left: 100px; top: 140px; font-family: var(--mono); font-size: 19px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+      .eyebrow b { color: var(--red); font-weight: 700; margin-right: 14px; }
+      .cap { position: absolute; left: 100px; top: 968px; display: flex; align-items: center; gap: 18px; font-weight: 500; font-size: 30px; color: var(--text); max-width: 900px; }
+      .cap::before { content: ""; display: block; width: 4px; height: 40px; background: linear-gradient(180deg, var(--red), var(--green)); }
+      .card { position: absolute; background: linear-gradient(90deg, rgba(255,255,255,0.025), transparent 60%), var(--grad-surface); border: 1px solid var(--border); border-left: 4px solid var(--border-s); box-shadow: 0 30px 60px rgba(0,0,0,0.35); }
+      .card.r { border-left-color: var(--red); }
+      .card.g { border-left-color: var(--green); }
+      .lbl { font-family: var(--mono); font-size: 16px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+      .tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); border: 1px solid var(--border-s); padding: 4px 10px; background: rgba(16,16,16,0.6); }
+      .tag.st::before { content: ""; width: 8px; height: 8px; background: #8f7cff00; border: 2px solid var(--green); }
+      .kv { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 19px; padding: 7px 0; border-top: 1px solid #262626; color: var(--text-2); }
+      .kv span:last-child { color: var(--text); }
+      .stamp { position: absolute; display: flex; align-items: center; gap: 22px; padding: 14px 26px 14px 22px; border: 4px solid currentColor; outline: 2px solid currentColor; outline-offset: 6px; font-family: var(--mono); white-space: nowrap; }
+      .stamp .v { font-size: 54px; font-weight: 800; letter-spacing: 0.04em; line-height: 1; }
+      .stamp .x { display: flex; flex-direction: column; font-size: 20px; font-weight: 500; color: var(--text); line-height: 1.35; }
+      .stamp.ok { color: var(--green); background: rgba(15,36,22,0.92); box-shadow: 0 0 70px rgba(52,217,115,0.28); }
+      .stamp.no { color: var(--red); background: rgba(51,17,15,0.92); box-shadow: 0 0 90px rgba(255,65,54,0.35); }
+      .cell { position: absolute; width: 26px; height: 26px; background: #242424; border: 1px solid #2e2e2e; }
+      .big { font-weight: 900; line-height: 0.95; letter-spacing: -0.02em; }
+      .tick { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; background: var(--green-dim); border: 1px solid var(--green); color: var(--green); font-family: var(--mono); font-weight: 800; font-size: 18px; }
+      .typed { display: inline-block; overflow: hidden; white-space: nowrap; vertical-align: bottom; width: 0; }
+      .bar { position: absolute; left: 0; top: 0; height: 100%; width: 100%; transform-origin: left center; }
+
+      /* ---------- S0 hook ---------- */
+      #s0-gpu { position: absolute; left: 480px; top: 170px; width: 960px; height: 330px; }
+      #s0-price { position: absolute; left: 0; width: 1920px; top: 560px; text-align: center; font-size: 230px; }
+      #s0-strike { position: absolute; left: 560px; top: 690px; width: 800px; height: 14px; background: var(--grad-red); box-shadow: 0 0 40px rgba(255,65,54,0.6); transform-origin: left center; }
+      #s0-oor { position: absolute; left: 0; width: 1920px; top: 836px; text-align: center; }
+      #s0-oor span { display: inline-block; font-family: var(--mono); font-weight: 700; font-size: 26px; letter-spacing: 0.3em; color: var(--red); border: 2px solid var(--red); padding: 8px 20px; background: rgba(51,17,15,0.8); }
+
+      /* ---------- S1 ---------- */
+      #s1-logo { position: absolute; left: 0; top: 300px; width: 1920px; display: flex; justify-content: center; align-items: center; gap: 56px; }
+      #s1-logo .word { font-size: 210px; }
+      #s1-wm { position: relative; }
+      #s1-rim { position: absolute; left: 6px; right: 6px; bottom: -34px; height: 8px; background: linear-gradient(90deg, var(--red), var(--green)); transform-origin: left center; }
+      #s1-sub { position: absolute; left: 0; width: 1920px; top: 690px; text-align: center; font-size: 40px; font-weight: 500; color: var(--text-2); }
+      #s1-sub b { color: var(--text); font-weight: 700; }
+      .ltr { display: inline-block; }
+      #s1-pool { left: 100px; top: 200px; width: 560px; height: 700px; }
+      #s1-tank { position: absolute; left: 40px; right: 40px; top: 180px; bottom: 90px; border: 2px solid var(--border-s); background: var(--grad-inset); overflow: hidden; }
+      #s1-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; transform-origin: bottom center; background: linear-gradient(180deg, rgba(52,217,115,0.55), rgba(15,36,22,0.9)); border-top: 3px solid var(--green); }
+      .av { position: absolute; top: 92px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 30px; background: var(--bg-raised); border: 1px solid var(--border-s); }
+      .coin { position: absolute; width: 22px; height: 22px; background: var(--grad-green); box-shadow: 0 0 14px rgba(52,217,115,0.6); }
+      .qrow { position: absolute; left: 130px; width: 900px; height: 124px; }
+      .rank { position: absolute; left: 0; width: 70px; height: 124px; display: flex; align-items: center; font-weight: 900; font-size: 52px; color: var(--border-s); }
+      .qname { position: absolute; left: 28px; top: 20px; font-size: 40px; font-weight: 700; }
+      .qsave { position: absolute; left: 28px; top: 74px; font-family: var(--mono); font-size: 18px; color: var(--muted); }
+      .qtrack { position: absolute; left: 300px; top: 50px; width: 380px; height: 24px; background: #121212; border: 1px solid var(--border); }
+      .qfill { background: linear-gradient(90deg, rgba(52,217,115,0.35), var(--green)); }
+      .qcred { position: absolute; left: 690px; top: 38px; width: 190px; text-align: right; font-family: var(--mono); font-weight: 700; font-size: 34px; }
+      #s1-next { position: absolute; right: 24px; top: -16px; }
+
+      /* ---------- S2 ---------- */
+      #s2-title { position: absolute; left: 0; width: 1920px; top: 200px; text-align: center; font-size: 96px; }
+      #s2-human { position: relative; display: inline-block; color: var(--text-2); }
+      #s2-hstrike { position: absolute; left: -8px; right: -8px; top: 52%; height: 10px; background: var(--grad-red); transform-origin: left center; box-shadow: 0 0 24px rgba(255,65,54,0.6); }
+      .node { position: absolute; top: 430px; width: 300px; height: 300px; padding: 26px; }
+      .node .n { font-family: var(--mono); font-size: 18px; color: var(--muted); letter-spacing: 0.12em; }
+      .node h3 { font-size: 40px; font-weight: 800; margin-top: 6px; letter-spacing: 0.02em; }
+      .node p { font-size: 21px; color: var(--text-2); margin-top: 6px; line-height: 1.3; }
+      .node .mini { position: absolute; left: 26px; right: 26px; bottom: 26px; }
+      .conn { position: absolute; top: 579px; height: 3px; width: 50px; background: linear-gradient(90deg, var(--red), var(--green)); transform-origin: left center; }
+      #s2-rail { position: absolute; left: 252px; top: 771px; width: 1416px; height: 1px; background: linear-gradient(90deg, rgba(255,65,54,0.5), rgba(52,217,115,0.5)); }
+      #s2-pkt { position: absolute; left: 0; top: 764px; width: 16px; height: 16px; background: var(--green-b); box-shadow: 0 0 20px var(--green), 0 0 40px var(--green); }
+      .chipok, .chipno { display: inline-block; font-family: var(--mono); font-weight: 800; font-size: 18px; padding: 5px 10px; border: 2px solid currentColor; }
+      .chipok { color: var(--green); background: var(--green-dim); } .chipno { color: var(--red); background: var(--red-dim); }
+
+      /* ---------- pipeline strip ---------- */
+      #pipe-in { position: absolute; right: 80px; top: 966px; display: flex; align-items: center; gap: 10px; }
+      .ps { position: relative; width: 136px; height: 46px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: 0.12em; color: var(--muted); border: 1px solid var(--border-s); background: rgba(16,16,16,0.85); overflow: hidden; }
+      .ps .gl, .ps .rl { position: absolute; inset: 0; opacity: 0; }
+      .ps .gl { background: linear-gradient(180deg, rgba(52,217,115,0.45), rgba(15,36,22,0.9)); border-top: 3px solid var(--green); }
+      .ps .rl { background: linear-gradient(180deg, rgba(255,65,54,0.5), rgba(51,17,15,0.9)); border-top: 3px solid var(--red); }
+      .ps span { position: relative; }
+      .pa { width: 14px; height: 2px; background: var(--border-s); }
+
+      /* ---------- wipe ---------- */
+      #wipe-line { position: absolute; top: 0; left: 0; width: 6px; height: 1080px; background: linear-gradient(180deg, var(--red), var(--green)); box-shadow: 0 0 40px rgba(255,65,54,0.6), 0 0 90px rgba(52,217,115,0.4); }
+
+      /* ---------- S3 ---------- */
+      .col-h { position: absolute; top: 196px; font-family: var(--mono); font-size: 17px; letter-spacing: 0.18em; color: var(--muted); }
+      .gate-row { position: absolute; left: 0; width: 560px; height: 62px; display: flex; align-items: center; gap: 16px; font-size: 22px; border-bottom: 1px solid #262626; }
+      .gate-row .c { font-family: var(--mono); font-weight: 700; color: var(--green); width: 64px; }
+      .gpu-tile { position: absolute; width: 520px; height: 170px; }
+      .led { display: inline-block; width: 12px; height: 12px; background: var(--border-s); margin-right: 10px; }
+      .split-row { position: absolute; left: 0; width: 520px; height: 46px; }
+      .split-row .nm { position: absolute; left: 0; top: 8px; font-size: 22px; font-weight: 600; }
+      .split-row .tr { position: absolute; left: 110px; top: 18px; width: 250px; height: 12px; background: #121212; }
+      .split-row .am { position: absolute; right: 0; top: 6px; font-family: var(--mono); font-weight: 700; font-size: 22px; color: var(--green); }
+      .arrow { position: absolute; font-family: var(--mono); font-size: 40px; color: var(--border-s); }
+
+      /* ---------- S4 ---------- */
+      .pt { position: absolute; width: 14px; height: 14px; background: var(--green); box-shadow: 0 0 12px var(--green); }
+      .hb { position: absolute; bottom: 0; width: 12px; background: linear-gradient(180deg, var(--green), rgba(52,217,115,0.2)); transform-origin: bottom center; }
+      #s4-gauge { position: absolute; left: 32px; top: 120px; width: 456px; height: 40px; background: #121212; border: 1px solid var(--border-s); }
+      #s4-thr { position: absolute; top: -14px; width: 3px; height: 68px; background: var(--red); }
+
+      /* ---------- S6 ---------- */
+      #s6-dim { position: absolute; inset: 0; background: rgba(10,10,10,0.78); opacity: 0; }
+      .badge { display: inline-block; font-family: var(--mono); font-weight: 800; font-size: 20px; letter-spacing: 0.1em; padding: 6px 14px; border: 2px solid currentColor; }
+      .mem { position: relative; padding: 18px 22px; margin-top: 16px; background: rgba(16,16,16,0.7); border: 1px solid var(--border); border-left: 3px solid var(--green); font-size: 25px; line-height: 1.35; }
+      .mem .d { font-family: var(--mono); font-size: 16px; color: var(--muted); letter-spacing: 0.1em; display: block; margin-bottom: 4px; }
+
+      /* ---------- S7 ---------- */
+      .seg { position: absolute; top: 0; width: 82px; height: 64px; background: var(--grad-green); }
+
+      /* ---------- S8 ---------- */
+      .ans { position: absolute; left: 36px; width: 1030px; height: 60px; display: flex; align-items: center; gap: 22px; font-size: 26px; }
+      .cl { display: inline-block; width: 84px; text-align: center; font-family: var(--mono); font-weight: 700; font-size: 20px; padding: 5px 0; color: var(--green); border: 1px solid var(--green); background: var(--green-dim); }
+      .eqp { display: inline-block; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="118" data-width="1920" data-height="1080">
+
+      <!-- ===================== background (whole film) ===================== -->
+      <div id="bg" class="clip" data-start="0" data-duration="118" data-track-index="0">
+        <div id="bg-grid"></div>
+        <div id="glow-r" class="glow"></div>
+        <div id="glow-g" class="glow"></div>
+        <div id="vignette"></div>
+        <div id="redflash"></div>
+      </div>
+
+      <!-- ===================== S0 hook 0.00–7.40 ===================== -->
+      <section id="s0" class="clip" data-start="0" data-duration="7.4" data-track-index="2">
+        <div class="stage" id="s0-st">
+          <svg id="s0-gpu" viewBox="0 0 960 330">
+            <defs>
+              <linearGradient id="gpuR" x1="0" x2="1"><stop offset="0" stop-color="#ff4136"/><stop offset="1" stop-color="#34d973"/></linearGradient>
+            </defs>
+            <rect x="20" y="10" width="920" height="250" fill="#1d1d1d" stroke="#454545" stroke-width="3"/>
+            <rect x="20" y="10" width="920" height="6" fill="url(#gpuR)"/>
+            <g stroke="#2a2a2a" stroke-width="3">
+              <line x1="620" y1="40" x2="620" y2="230"/><line x1="640" y1="40" x2="640" y2="230"/><line x1="660" y1="40" x2="660" y2="230"/>
+              <line x1="680" y1="40" x2="680" y2="230"/><line x1="700" y1="40" x2="700" y2="230"/><line x1="720" y1="40" x2="720" y2="230"/>
+              <line x1="740" y1="40" x2="740" y2="230"/><line x1="760" y1="40" x2="760" y2="230"/>
+            </g>
+            <g id="fanA" transform="translate(160 135)">
+              <rect x="-95" y="-95" width="190" height="190" fill="#121212" stroke="#454545" stroke-width="3"/>
+              <g id="bladesA" fill="#2e2e2e" stroke="#454545" stroke-width="2">
+                <polygon points="-8,-8 -14,-82 14,-82 8,-8"/><polygon points="8,-8 82,-14 82,14 8,8"/>
+                <polygon points="8,8 14,82 -14,82 -8,8"/><polygon points="-8,8 -82,14 -82,-14 -8,-8"/>
+              </g>
+              <rect x="-16" y="-16" width="32" height="32" fill="#ff4136"/>
+            </g>
+            <g id="fanB" transform="translate(420 135)">
+              <rect x="-95" y="-95" width="190" height="190" fill="#121212" stroke="#454545" stroke-width="3"/>
+              <g id="bladesB" fill="#2e2e2e" stroke="#454545" stroke-width="2">
+                <polygon points="-8,-8 -14,-82 14,-82 8,-8"/><polygon points="8,-8 82,-14 82,14 8,8"/>
+                <polygon points="8,8 14,82 -14,82 -8,8"/><polygon points="-8,8 -82,14 -82,-14 -8,-8"/>
+              </g>
+              <rect x="-16" y="-16" width="32" height="32" fill="#34d973"/>
+            </g>
+            <text x="800" y="120" fill="#7d7d7d" font-family="JetBrains Mono" font-size="22" font-weight="700" text-anchor="middle">H-CLASS</text>
+            <text x="800" y="150" fill="#454545" font-family="JetBrains Mono" font-size="16" text-anchor="middle">80 GB</text>
+            <rect x="860" y="200" width="60" height="10" fill="#34d973"/>
+            <g fill="#454545">
+              <rect x="120" y="260" width="460" height="22"/>
+            </g>
+            <g fill="#161616">
+              <rect x="140" y="266" width="8" height="16"/><rect x="160" y="266" width="8" height="16"/><rect x="180" y="266" width="8" height="16"/><rect x="200" y="266" width="8" height="16"/>
+              <rect x="220" y="266" width="8" height="16"/><rect x="240" y="266" width="8" height="16"/><rect x="260" y="266" width="8" height="16"/><rect x="280" y="266" width="8" height="16"/>
+              <rect x="320" y="266" width="8" height="16"/><rect x="340" y="266" width="8" height="16"/><rect x="360" y="266" width="8" height="16"/><rect x="380" y="266" width="8" height="16"/>
+              <rect x="400" y="266" width="8" height="16"/><rect x="420" y="266" width="8" height="16"/><rect x="440" y="266" width="8" height="16"/><rect x="460" y="266" width="8" height="16"/>
+              <rect x="480" y="266" width="8" height="16"/><rect x="500" y="266" width="8" height="16"/><rect x="520" y="266" width="8" height="16"/><rect x="540" y="266" width="8" height="16"/>
+            </g>
+          </svg>
+          <div id="s0-price" class="big">£<span id="s0-num">0</span></div>
+          <div id="s0-strike"></div>
+          <div id="s0-oor"><span>OUT OF REACH</span></div>
+          <div class="cap" id="s0-cap">A serious GPU costs £10,000. Most builders can't buy one.</div>
+        </div>
+      </section>
+
+      <!-- ===================== header 7.40–110.2 ===================== -->
+      <div id="hdr" class="clip" data-start="7.4" data-duration="102.8" data-track-index="1">
+        <div id="hdr-in" class="stage">
+          <div id="hdr-logo">
+            <svg width="40" height="44" viewBox="-12 -12 184 204">
+              <g fill="#454545"><rect x="30" y="-12" width="14" height="12"/><rect x="74" y="-12" width="14" height="12"/><rect x="118" y="-12" width="14" height="12"/>
+                <rect x="30" y="180" width="14" height="12"/><rect x="74" y="180" width="14" height="12"/><rect x="118" y="180" width="14" height="12"/></g>
+              <rect width="160" height="180" fill="#1d1d1d" stroke="#454545" stroke-width="8"/>
+              <rect x="24" y="24" width="56" height="132" fill="#ff4136"/><rect x="80" y="24" width="56" height="132" fill="#34d973"/>
+            </svg>
+            <div class="word"><span class="m">MORT</span><span class="g">GPU</span></div>
+          </div>
+          <div id="hdr-test"><i></i>STRIPE TEST MODE · NO HUMAN IN THE LOOP</div>
+          <div id="hdr-rule"></div>
+        </div>
+      </div>
+
+      <!-- ===================== S1 what it is 7.40–22.19 ===================== -->
+      <section id="s1" class="clip" data-start="7.4" data-duration="14.79" data-track-index="2">
+        <div class="stage" id="s1-st">
+          <div id="s1-a" class="stage">
+            <div id="s1-logo">
+              <svg id="s1-chip" width="200" height="226" viewBox="-24 -24 208 228">
+                <g fill="#454545">
+                  <rect class="pin" x="30" y="-22" width="12" height="22"/><rect class="pin" x="74" y="-22" width="12" height="22"/><rect class="pin" x="118" y="-22" width="12" height="22"/>
+                  <rect class="pin" x="30" y="180" width="12" height="22"/><rect class="pin" x="74" y="180" width="12" height="22"/><rect class="pin" x="118" y="180" width="12" height="22"/>
+                  <rect class="pin" x="-22" y="30" width="22" height="12"/><rect class="pin" x="-22" y="84" width="22" height="12"/><rect class="pin" x="-22" y="138" width="22" height="12"/>
+                  <rect class="pin" x="160" y="30" width="22" height="12"/><rect class="pin" x="160" y="84" width="22" height="12"/><rect class="pin" x="160" y="138" width="22" height="12"/>
+                </g>
+                <rect width="160" height="180" fill="#1d1d1d" stroke="#454545" stroke-width="4"/>
+                <rect id="s1-hr" x="24" y="24" width="56" height="132" fill="#ff4136"/>
+                <rect id="s1-hg" x="80" y="24" width="56" height="132" fill="#34d973"/>
+              </svg>
+              <div id="s1-wm" class="word"><span class="m ltr" id="s1-mort">MORT</span><span class="g ltr" id="s1-gpuw">GPU</span><div id="s1-rim"></div></div>
+            </div>
+            <div id="s1-sub">a <b>ROSCA</b> for GPUs: a rotating savings club</div>
+          </div>
+          <div id="s1-b" class="stage">
+            <div class="eyebrow" id="s1-eb"><b>01</b>THE CLUB</div>
+            <div class="card g" id="s1-pool" style="left:100px;top:200px;width:560px;height:700px;">
+              <div class="lbl" style="position:absolute;left:40px;top:34px;">THE POOL · members save monthly</div>
+              <div class="av" style="left:40px;">P</div><div class="av" style="left:132px;">T</div><div class="av" style="left:224px;">A</div><div class="av" style="left:316px;">B</div><div class="av" style="left:408px;">C</div>
+              <div id="s1-tank"><div id="s1-fill"></div></div>
+              <div id="s1-coins"></div>
+              <div class="mono" style="position:absolute;left:40px;bottom:36px;font-size:18px;color:var(--text-2);">savings → pool cash → next GPU</div>
+            </div>
+            <div class="card" id="s1-queue" style="left:760px;top:200px;width:1060px;height:700px;">
+              <div class="lbl" style="position:absolute;left:40px;top:34px;">QUEUE · credits = savings × days held</div>
+              <div class="rank" style="left:40px;top:110px;">#1</div>
+              <div class="rank" style="left:40px;top:250px;">#2</div>
+              <div class="rank" style="left:40px;top:390px;">#3</div>
+              <div class="qrow" id="q-amara" style="top:390px;">
+                <div class="qname">Amara</div><div class="qsave">saved £2,000 · waited longest</div>
+                <div class="qtrack"><div class="bar qfill" id="qf-amara"></div></div>
+                <div class="qcred" id="qc-amara">0</div>
+                <div id="s1-next"><span class="chipok">NEXT GPU →</span></div>
+              </div>
+              <div class="qrow" id="q-tom" style="top:250px;">
+                <div class="qname">Tom</div><div class="qsave">saved £7,000</div>
+                <div class="qtrack"><div class="bar qfill" id="qf-tom"></div></div>
+                <div class="qcred" id="qc-tom">0</div>
+              </div>
+              <div class="qrow" id="q-priya" style="top:110px;">
+                <div class="qname">Priya</div><div class="qsave">saved £10,000</div>
+                <div class="qtrack"><div class="bar qfill" id="qf-priya"></div></div>
+                <div class="qcred" id="qc-priya">0</div>
+              </div>
+              <div class="card g" id="s1-dep" style="left:40px;top:560px;width:980px;height:100px;background:linear-gradient(90deg, rgba(52,217,115,0.14), rgba(15,36,22,0.85));">
+                <div style="position:absolute;left:28px;top:26px;font-size:34px;font-weight:700;">Amara's <span class="green">£2,000</span> savings become her <span class="green">deposit</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="cap" id="s1-cap1">MORTGPU: a savings club for GPUs</div>
+          <div class="cap" id="s1-cap2">Patience earns credits. Top of the queue gets the next GPU.</div>
+        </div>
+      </section>
+
+      <!-- ===================== S2 control loop 22.19–37.04 ===================== -->
+      <section id="s2" class="clip" data-start="22.19" data-duration="14.85" data-track-index="2">
+        <div class="stage" id="s2-st">
+          <div class="eyebrow"><b>02</b>THE CONTROL LOOP</div>
+          <div id="s2-title" class="big">NO <span id="s2-human">HUMAN<span id="s2-hstrike" style="display:block"></span></span> IN THE LOOP</div>
+          <div id="s2-flow" class="stage">
+            <div class="conn" id="cn1" style="left:410px;"></div>
+            <div class="conn" id="cn2" style="left:760px;"></div>
+            <div class="conn" id="cn3" style="left:1110px;"></div>
+            <div class="conn" id="cn4" style="left:1460px;"></div>
+            <div class="card r node" id="nd1" style="left:110px;"><div class="n">01 · LLM</div><h3>PROPOSE</h3><p>An AI agent proposes every action</p>
+              <div class="mini mono" style="font-size:16px;color:var(--green);">propose_action{ buyback, £1,000 }</div></div>
+            <div class="card node" id="nd2" style="left:460px;"><div class="n">02 · policy.json</div><h3>GATE</h3><p>Deterministic. Allows or blocks.</p>
+              <div class="mini"><span class="chipok" id="nd2-a">ALLOW</span> <span class="chipno" id="nd2-b">BLOCK</span> <span class="chipok" id="nd2-c" style="color:var(--text);border-color:var(--border-s);background:#121212;">§ 4.2</span></div></div>
+            <div class="card g node" id="nd3" style="left:810px;"><div class="n">03 · test mode</div><h3>STRIPE</h3><p>Charges, subscriptions, meters</p>
+              <div class="mini mono" style="font-size:15px;color:var(--text-2);line-height:1.6;">PaymentIntent<br>Subscription · Meter</div></div>
+            <div class="card g node" id="nd4" style="left:1160px;"><div class="n">04 · memory</div><h3>COGNEE</h3><p>Remembers promises and decisions</p>
+              <div class="mini mono" style="font-size:15px;color:var(--text-2);">recall("Carl's promises")</div></div>
+            <div class="card g node" id="nd5" style="left:1510px;"><div class="n">05 · audit</div><h3>LEDGER</h3><p>Every pound, every clause</p>
+              <div class="mini mono" style="font-size:15px;color:var(--text-2);line-height:1.6;">D-a863f5 §2.1 ✓<br>D-67c0b5 §4.2 ✗</div></div>
+            <div id="s2-rail"></div><div id="s2-pkt"></div>
+          </div>
+          <div class="cap" id="s2-cap">Agent proposes. Policy decides, citing a clause. Then Stripe.</div>
+        </div>
+      </section>
+
+      <!-- ===================== S3 contract → bill 37.04–54.31 ===================== -->
+      <section id="s3" class="clip" data-start="37.04" data-duration="17.27" data-track-index="2">
+        <div class="stage" id="s3-st">
+          <div class="eyebrow"><b>03</b>CONTRACT → BILL · AMARA</div>
+          <!-- column 1 -->
+          <div class="card r" id="s3-contract" style="left:100px;top:200px;width:520px;height:300px;padding:28px 30px;">
+            <div class="lbl">CONTRACT · inbox</div>
+            <div style="font-size:38px;font-weight:800;margin:6px 0 12px;">GPU-001 purchase</div>
+            <div class="kv"><span>member</span><span>amara · #1 §1.1</span></div>
+            <div class="kv"><span>price</span><span>£10,000.00</span></div>
+            <div class="kv"><span>supplier</span><span>northwind</span></div>
+          </div>
+          <div class="card g" id="s3-eq" style="left:100px;top:530px;width:520px;height:380px;padding:28px 30px;">
+            <div class="lbl">EQUITY · §1.2</div>
+            <div id="s3-grid" style="position:absolute;left:30px;top:76px;width:300px;height:300px;"></div>
+            <div class="big green" style="position:absolute;left:350px;top:110px;font-size:110px;"><span id="s3-eqn">0</span><span style="font-size:60px">%</span></div>
+            <div class="mono t2" style="position:absolute;left:350px;top:230px;font-size:18px;line-height:1.5;width:150px;">£2,000 savings at locked price</div>
+          </div>
+          <div class="arrow" id="s3-ar1" style="left:632px;top:470px;">→</div>
+          <!-- column 2 -->
+          <div class="col-h" id="s3-gh" style="left:690px;">POLICY GATE · policy.json</div>
+          <div id="s3-gates" style="position:absolute;left:690px;top:236px;width:560px;height:330px;">
+            <div class="gate-row" style="top:0"><span class="tick">✓</span><span class="c">§2.1</span>deposit 20% ≥ 20%</div>
+            <div class="gate-row" style="top:62px"><span class="tick">✓</span><span class="c">§2.2</span>price £10,000 ≤ cap</div>
+            <div class="gate-row" style="top:124px"><span class="tick">✓</span><span class="c">§2.3</span>supplier on allowlist</div>
+            <div class="gate-row" style="top:186px"><span class="tick">✓</span><span class="c">§2.4</span>projected ICR ≥ 125%</div>
+            <div class="gate-row" style="top:248px"><span class="tick">✓</span><span class="c">§2.5</span>pool cash £10,600 ≥ price</div>
+          </div>
+          <div class="stamp ok" id="s3-stamp" style="left:700px;top:600px;"><span class="v">ALLOW</span><span class="x"><span>D-a863f5</span><span class="t2">§2.1–2.5 pass</span></span></div>
+          <div class="card g" id="s3-sup" style="left:690px;top:770px;width:560px;height:140px;padding:24px 28px;">
+            <div class="lbl">PAY SUPPLIER · §2.3</div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;"><span style="font-size:30px;font-weight:700;">northwind</span><span class="mono" style="font-size:34px;font-weight:800;">−£10,000.00</span></div>
+            <span class="badge green" id="s3-paid" style="position:absolute;right:28px;top:20px;font-size:15px;padding:3px 10px;">PAID</span>
+          </div>
+          <div class="arrow" id="s3-ar2" style="left:1262px;top:470px;">→</div>
+          <!-- column 3 -->
+          <div class="card gpu-tile" id="s3-gpu" style="left:1300px;top:200px;">
+            <svg width="96" height="104" viewBox="-12 -12 184 204" style="position:absolute;left:30px;top:33px;">
+              <g fill="#454545"><rect x="30" y="-12" width="14" height="12"/><rect x="74" y="-12" width="14" height="12"/><rect x="118" y="-12" width="14" height="12"/><rect x="30" y="180" width="14" height="12"/><rect x="74" y="180" width="14" height="12"/><rect x="118" y="180" width="14" height="12"/></g>
+              <rect width="160" height="180" fill="#121212" stroke="#454545" stroke-width="8"/>
+              <rect id="s3-core" x="24" y="24" width="112" height="132" fill="#2e2e2e"/>
+            </svg>
+            <div style="position:absolute;left:150px;top:30px;font-size:40px;font-weight:800;">GPU-001</div>
+            <div class="mono" style="position:absolute;left:150px;top:88px;font-size:20px;"><span class="led" id="s3-led"></span><span id="s3-st1" class="muted">PROVISIONING</span><span id="s3-st2" class="green" style="position:absolute;left:22px;top:0;opacity:0;font-weight:700;white-space:nowrap;">ONLINE · amara</span></div>
+            <div class="mono muted" style="position:absolute;left:150px;top:124px;font-size:16px;">key gk_live••••a1 issued</div>
+          </div>
+          <div class="card g" id="s3-sub" style="left:1300px;top:400px;width:520px;height:270px;padding:24px 28px;">
+            <div style="display:flex;justify-content:space-between;"><span class="lbl">STRIPE · SUBSCRIPTION</span><span class="tag st">test mode</span></div>
+            <div style="font-size:24px;font-weight:600;margin-top:8px;" class="t2">Amara · GPU-001 rent</div>
+            <div class="big" style="font-size:76px;margin:4px 0 6px;"><span id="s3-rent">£0</span><span class="t2" style="font-size:30px;font-weight:600;"> /mo</span></div>
+            <div class="kv"><span>qty 800 × £0.50</span><span>= £400.00</span></div>
+            <div class="kv"><span>decision_id</span><span class="green">D-a863f5</span></div>
+          </div>
+          <div id="s3-split" style="position:absolute;left:1300px;top:700px;width:520px;height:210px;">
+            <div class="lbl" style="margin-bottom:6px;">RENT SPLIT · §3.3 pro rata</div>
+            <div class="split-row" style="top:34px"><span class="nm">Priya</span><span class="tr"><span class="bar" style="background:var(--green);display:block;width:100%;"></span></span><span class="am">£213.90</span></div>
+            <div class="split-row" style="top:78px"><span class="nm">Tom</span><span class="tr"><span class="bar" style="background:var(--green);display:block;width:70%;"></span></span><span class="am">£149.73</span></div>
+            <div class="split-row" style="top:122px"><span class="nm">Ben</span><span class="tr"><span class="bar" style="background:var(--green);display:block;width:12%;"></span></span><span class="am">£25.67</span></div>
+            <div class="split-row" style="top:166px"><span class="nm">Carl</span><span class="tr"><span class="bar" style="background:var(--green);display:block;width:5%;"></span></span><span class="am">£10.70</span></div>
+          </div>
+          <div class="cap" id="s3-cap">Contract → 5 clauses pass → supplier paid → rent billed</div>
+        </div>
+      </section>
+
+      <!-- ===================== S4 usage → bill 54.31–63.77 ===================== -->
+      <section id="s4" class="clip" data-start="54.31" data-duration="9.46" data-track-index="2">
+        <div class="stage" id="s4-st">
+          <div class="eyebrow"><b>04</b>USAGE → BILL</div>
+          <div class="card r" id="s4-nova" style="left:100px;top:210px;width:360px;height:170px;padding:26px 28px;">
+            <div class="lbl">AMARA'S CUSTOMER</div>
+            <div style="font-size:44px;font-weight:800;margin-top:6px;">Nova Labs</div>
+            <div class="mono t2" style="font-size:18px;">inference API calls</div>
+          </div>
+          <div id="s4-stream" style="position:absolute;left:470px;top:286px;width:400px;height:20px;"></div>
+          <div class="card g" id="s4-gpu" style="left:880px;top:210px;width:340px;height:170px;padding:26px 28px;">
+            <div class="lbl">RUNS ON</div>
+            <div style="font-size:44px;font-weight:800;margin-top:6px;">GPU-001</div>
+            <div class="mono green" style="font-size:18px;"><span class="led" style="background:var(--green);box-shadow:0 0 10px var(--green);"></span>ONLINE · metering</div>
+          </div>
+          <div id="s4-meter" style="position:absolute;left:100px;top:440px;width:1120px;height:470px;">
+            <div class="lbl">STRIPE METER · gpu_minutes · one event per batch</div>
+            <div class="big" style="position:absolute;left:0;top:50px;font-size:170px;"><span id="s4-min">0</span></div>
+            <div class="mono t2" style="position:absolute;left:6px;top:250px;font-size:26px;">GPU-minutes × £0.04</div>
+            <div id="s4-hist" style="position:absolute;left:660px;top:70px;width:480px;height:220px;border-bottom:1px solid var(--border-s);"></div>
+          </div>
+          <div class="card g" id="s4-inv" style="left:1300px;top:210px;width:520px;height:320px;padding:26px 30px;">
+            <div style="display:flex;justify-content:space-between;"><span class="lbl">STRIPE · INVOICE</span><span class="tag st">test mode</span></div>
+            <div style="font-size:26px;font-weight:600;margin-top:8px;" class="t2">Nova Labs · usage</div>
+            <div class="big" style="font-size:88px;margin:6px 0;" id="s4-amt">£0</div>
+            <div class="kv"><span>30,000 × £0.04</span><span>= £1,200.00</span></div>
+            <div class="stamp ok" id="s4-paid" style="right:30px;top:64px;padding:6px 12px;"><span class="v" style="font-size:34px;">PAID</span></div>
+          </div>
+          <div class="card g" id="s4-icr" style="left:1300px;top:560px;width:520px;height:350px;padding:26px 30px;">
+            <div class="lbl">INCOME COVER · §3.2</div>
+            <div id="s4-gauge"><div class="bar" id="s4-gfill" style="background:linear-gradient(90deg, rgba(52,217,115,0.3), var(--green));"></div><div id="s4-thr" style="left:162px;"></div></div>
+            <div class="mono red" style="position:absolute;left:170px;top:178px;font-size:16px;">125% floor</div>
+            <div class="big" style="position:absolute;left:30px;top:210px;font-size:90px;"><span id="s4-icrn" class="green">0</span><span class="green" style="font-size:50px;">%</span></div>
+            <div style="position:absolute;left:260px;top:236px;font-size:30px;font-weight:700;" id="s4-3x">= 3× her rent</div>
+          </div>
+          <div class="cap" id="s4-cap">Usage billed per GPU-minute through Stripe meters</div>
+        </div>
+      </section>
+
+      <!-- ===================== S5 buy-back 63.77–68.79 ===================== -->
+      <section id="s5" class="clip" data-start="63.77" data-duration="5.02" data-track-index="2">
+        <div class="stage" id="s5-st">
+          <div class="eyebrow"><b>05</b>BUY-BACK</div>
+          <div class="card r" id="s5-mail" style="left:100px;top:260px;width:520px;height:420px;padding:30px;">
+            <div class="lbl">EMAIL · from Amara</div>
+            <div style="font-size:32px;line-height:1.35;margin-top:22px;font-weight:500;">“Nova paid well this month. I'd like to buy back <span class="green" style="font-weight:800;">£1,000</span> of my GPU.”</div>
+          </div>
+          <div class="stamp ok" id="s5-stamp" style="left:700px;top:330px;"><span class="v">ALLOW</span><span class="x"><span>D-963715</span><span class="t2">§5.2 pass</span></span></div>
+          <div class="card g" id="s5-pi" style="left:690px;top:520px;width:500px;height:160px;padding:26px 28px;">
+            <div class="lbl">STRIPE · PAYMENTINTENT</div>
+            <div class="mono" style="font-size:40px;font-weight:800;margin-top:10px;">£1,000.00 <span class="green" style="font-size:22px;">succeeded</span></div>
+          </div>
+          <div class="card g" id="s5-eq" style="left:1260px;top:260px;width:560px;height:420px;padding:30px;">
+            <div class="lbl">AMARA'S EQUITY · RENT</div>
+            <div id="s5-grid" style="position:absolute;left:30px;top:80px;width:300px;height:300px;"></div>
+            <div class="big green" style="position:absolute;left:350px;top:90px;font-size:96px;"><span id="s5-eqn">20</span><span style="font-size:52px;">%</span></div>
+            <div style="position:absolute;left:350px;top:220px;">
+              <div class="mono muted" style="position:relative;font-size:34px;font-weight:700;display:inline-block;">£400<span id="s5-strk" style="position:absolute;left:-4px;right:-4px;top:50%;height:4px;background:var(--red);display:block;transform-origin:left center;"></span></div>
+              <div class="mono green" id="s5-new" style="font-size:52px;font-weight:800;">£350<span style="font-size:22px;" class="t2">/mo</span></div>
+            </div>
+          </div>
+          <div class="cap" id="s5-cap">Buy back equity → rent falls</div>
+        </div>
+      </section>
+
+      <!-- ===================== S6 enforcement 68.79–89.65 ===================== -->
+      <section id="s6" class="clip" data-start="68.79" data-duration="20.86" data-track-index="2">
+        <div class="stage" id="s6-st">
+          <div class="eyebrow"><b>06</b>ENFORCEMENT · CARL</div>
+          <div id="s6-p1" class="stage">
+            <div class="card r" id="s6-inv" style="left:100px;top:200px;width:620px;height:250px;padding:26px 30px;">
+              <div style="display:flex;justify-content:space-between;"><span class="lbl">STRIPE · INVOICE · RENT</span><span class="tag st">test mode</span></div>
+              <div style="font-size:26px;font-weight:600;margin-top:8px;" class="t2">Carl Novak · GPU-003</div>
+              <div class="big" style="font-size:88px;margin-top:6px;">£480.00</div>
+              <span class="badge muted" id="s6-open" style="position:absolute;right:30px;top:140px;">OPEN</span>
+              <span class="badge red" id="s6-fail" style="position:absolute;right:30px;top:140px;background:var(--red-dim);opacity:0;">FAILED</span>
+            </div>
+            <div class="card r" id="s6-mail" style="left:100px;top:480px;width:620px;height:260px;padding:26px 30px;">
+              <div class="lbl">EMAIL · from Carl</div>
+              <div style="font-size:31px;line-height:1.35;margin-top:16px;font-weight:500;">“Rough month. <span style="font-weight:800;">Can I skip this month's rent?</span> I'll pay double next month, promise.”</div>
+            </div>
+            <div class="card g" id="s6-mem" style="left:790px;top:200px;width:1030px;height:540px;padding:28px 32px;">
+              <div style="display:flex;justify-content:space-between;"><span class="lbl" style="color:var(--green);">COGNEE · MEMORY RECALL</span><span class="tag">evidence, not the decider</span></div>
+              <div class="mono" style="font-size:22px;margin-top:16px;color:var(--text-2);">&gt; <span class="typed" id="s6-q">recall: has Carl kept past payment promises?</span></div>
+              <div class="mem" id="s6-m1"><span class="d">JULY 2026</span>Carl was granted a payment holiday. <span class="t2">1 of 1 allowed per 12 months.</span></div>
+              <div class="mem" id="s6-m2" style="border-left-color:var(--red);"><span class="d">AUGUST 2026</span>Promised to pay double. <span class="red" style="font-weight:800;">BROKEN.</span></div>
+              <div class="mono" id="s6-facts" style="font-size:19px;margin-top:20px;color:var(--text-2);">facts → holidays 1/1 · broken promises 1</div>
+            </div>
+          </div>
+          <div id="s6-dim"></div>
+          <div class="stamp no" id="s6-stamp" style="left:560px;top:380px;padding:26px 40px 26px 34px;"><span class="v" style="font-size:120px;">BLOCK</span><span class="x" style="font-size:30px;"><span>D-67c0b5</span><span style="color:var(--red-b);">§4.2</span></span></div>
+          <div id="s6-clause" style="position:absolute;left:0;width:1920px;top:640px;text-align:center;font-size:32px;font-weight:500;color:var(--text-2);">§4.2 · one payment holiday per 12 months, <span class="red" style="font-weight:700;">none after a broken promise</span></div>
+          <div id="s6-p3" class="stage">
+            <div class="card r" id="s6-c1" style="left:100px;top:420px;width:540px;height:400px;padding:28px 30px;">
+              <div class="lbl">EQUITY TAKEN · §4.3</div>
+              <div id="s6-cells" style="position:absolute;left:30px;top:90px;width:480px;height:60px;"></div>
+              <div class="big" style="position:absolute;left:30px;top:180px;font-size:110px;"><span id="s6-eqn" class="red">4</span><span class="red" style="font-size:60px;">%</span></div>
+              <div class="mono t2" style="position:absolute;left:30px;top:310px;font-size:21px;line-height:1.5;">£400 at locked price<br>covers £480 arrears</div>
+            </div>
+            <div class="card r" id="s6-c2" style="left:690px;top:420px;width:540px;height:400px;padding:28px 30px;">
+              <div class="lbl">WRITTEN OFF · §4.5</div>
+              <div class="big" style="position:absolute;left:30px;top:100px;font-size:150px;" id="s6-wo">£0</div>
+              <div class="mono t2" style="position:absolute;left:30px;top:290px;font-size:21px;line-height:1.5;">non-recourse<br><span class="green">savings untouched</span></div>
+            </div>
+            <div class="card r" id="s6-c3" style="left:1280px;top:420px;width:540px;height:400px;padding:28px 30px;">
+              <div class="lbl">ACCESS · §4.4</div>
+              <div style="position:absolute;left:30px;top:84px;font-size:46px;font-weight:800;" id="s6-gname">GPU-003</div>
+              <div class="mono" style="position:absolute;left:30px;top:156px;font-size:20px;color:var(--text-2);">GET /v1/infer · old key</div>
+              <div class="mono red" id="s6-403" style="position:absolute;left:30px;top:196px;font-size:84px;font-weight:800;">HTTP 403</div>
+              <div class="mono t2" id="s6-rel" style="position:absolute;left:30px;top:320px;font-size:21px;">lease closed · relisted, pool-owned</div>
+            </div>
+          </div>
+          <div class="cap" id="s6-cap1">Memory recalls a broken promise</div>
+          <div class="cap" id="s6-cap2">BLOCKED §4.2 → equity settles arrears → access revoked</div>
+        </div>
+      </section>
+
+      <!-- ===================== S7 payoff 89.65–99.11 ===================== -->
+      <section id="s7" class="clip" data-start="89.65" data-duration="9.46" data-track-index="2">
+        <div class="stage" id="s7-st">
+          <div class="eyebrow"><b>07</b>PAYOFF · BEN</div>
+          <div class="card g" id="s7-pay" style="left:100px;top:200px;width:820px;height:220px;padding:26px 30px;">
+            <div style="display:flex;justify-content:space-between;"><span class="lbl">STRIPE · PAYMENTINTENT</span><span class="tag st">test mode</span></div>
+            <div style="font-size:26px;font-weight:600;margin-top:6px;" class="t2">Ben Hartley · “take the last £500, hand me the keys”</div>
+            <div class="mono" style="font-size:64px;font-weight:800;margin-top:4px;">£500.00 <span class="green" style="font-size:24px;">succeeded</span></div>
+          </div>
+          <div class="stamp ok" id="s7-stamp" style="left:1000px;top:250px;"><span class="v">ALLOW</span><span class="x"><span>D-959906</span><span class="t2">§5.2 pass</span></span></div>
+          <div id="s7-own" style="position:absolute;left:100px;top:470px;width:1720px;height:150px;">
+            <div class="lbl">BEN'S OWNERSHIP · GPU-002</div>
+            <div class="big green" style="position:absolute;right:0;top:-26px;font-size:80px;"><span id="s7-pct">95</span>%</div>
+            <div id="s7-segs" style="position:absolute;left:0;top:70px;width:1720px;height:64px;"></div>
+          </div>
+          <div class="card g" id="s7-title" style="left:100px;top:670px;width:820px;height:240px;padding:28px 32px;border:1px solid transparent;border-left:4px solid var(--green);background:linear-gradient(#1d1d1d,#161616) padding-box, linear-gradient(120deg, var(--red), var(--green)) border-box;">
+            <div class="lbl">TITLE TRANSFER · §5.1</div>
+            <div style="font-size:56px;font-weight:900;margin-top:10px;">GPU-002 <span class="green">→ Ben</span></div>
+            <div class="mono t2" style="font-size:20px;margin-top:4px;">owns 100% · zero arrears · rent cancelled</div>
+          </div>
+          <div class="card r" id="s7-term" style="left:1000px;top:670px;width:820px;height:240px;padding:28px 32px;background:var(--grad-inset);">
+            <div class="mono" style="font-size:26px;color:var(--text-2);">$ <span class="typed" id="s7-cmd">pool.revoke("GPU-002")</span></div>
+            <div class="mono" id="s7-409" style="font-size:64px;font-weight:800;margin-top:14px;color:var(--red);">HTTP 409</div>
+            <div class="mono" id="s7-409b" style="font-size:20px;color:var(--green);">✓ pool no longer holds title</div>
+          </div>
+          <div class="cap" id="s7-cap">Paid off → title transfers. Even the pool can't revoke it.</div>
+        </div>
+      </section>
+
+      <!-- ===================== S8 explain 99.11–110.2 ===================== -->
+      <section id="s8" class="clip" data-start="99.11" data-duration="11.09" data-track-index="2">
+        <div class="stage" id="s8-st">
+          <div class="eyebrow"><b>08</b>EXPLAIN EVERY POUND</div>
+          <div class="card g" id="s8-term" style="left:100px;top:200px;width:1100px;height:580px;background:var(--grad-inset);">
+            <div class="mono" style="position:absolute;left:36px;top:30px;font-size:30px;"><span class="red">&gt;</span> <span class="typed" id="s8-q">Why was Carl disconnected?</span></div>
+            <div class="lbl" id="s8-al" style="position:absolute;left:36px;top:100px;color:var(--green);">ANSWER · from Cognee memory + audit ledger</div>
+            <div class="ans" style="top:150px;"><span class="cl">§4.1</span>£480 rent failed</div>
+            <div class="ans" style="top:230px;"><span class="cl" style="color:var(--red);border-color:var(--red);background:var(--red-dim);">§4.2</span>holiday blocked: broken promise</div>
+            <div class="ans" style="top:310px;"><span class="cl">§4.3</span>£400 equity taken at locked price</div>
+            <div class="ans" style="top:390px;"><span class="cl">§4.5</span>£80 written off · savings untouched</div>
+            <div class="ans" style="top:470px;"><span class="cl">§4.4</span>0% equity → lease ended, GPU-003 revoked</div>
+          </div>
+          <div class="card r" id="s8-md" style="left:1260px;top:200px;width:560px;height:580px;padding:30px 32px;">
+            <div class="lbl">ON EVERY STRIPE OBJECT</div>
+            <div class="mono" style="font-size:22px;line-height:2.1;margin-top:20px;color:var(--text-2);">
+              <div id="s8-k1">decision_id <span class="green">D-67c0b5</span></div>
+              <div id="s8-k2">policy_clause <span class="green">§4.3</span></div>
+              <div id="s8-k3">reason <span style="color:var(--text);">"arrears"</span></div>
+            </div>
+            <div style="position:absolute;left:32px;bottom:32px;font-size:44px;font-weight:900;line-height:1.05;">Every pound<br><span class="green">explained.</span></div>
+          </div>
+          <div id="s8-eq" style="position:absolute;left:100px;top:810px;width:1720px;height:110px;display:flex;align-items:center;gap:26px;font-weight:800;font-size:56px;">
+            <span class="eqp mono muted" style="font-size:26px;font-weight:700;">BOOKS</span>
+            <span class="eqp">Σ savings <span class="green">£19,100</span></span>
+            <span class="eqp t2">=</span>
+            <span class="eqp">cash £2,100</span>
+            <span class="eqp t2">+</span>
+            <span class="eqp">stakes £17,000</span>
+            <span class="eqp tick" style="width:66px;height:66px;font-size:40px;">✓</span>
+          </div>
+          <div class="cap" id="s8-cap">Every pound explained. The books balance.</div>
+        </div>
+      </section>
+
+      <!-- ===================== S9 close 110.2–118 ===================== -->
+      <section id="s9" class="clip" data-start="110.2" data-duration="7.8" data-track-index="2">
+        <div class="stage" id="s9-st">
+          <div id="s9-logo" style="position:absolute;left:0;top:300px;width:1920px;display:flex;justify-content:center;align-items:center;gap:56px;">
+            <svg id="s9-chip" width="200" height="226" viewBox="-24 -24 208 228">
+              <g fill="#454545">
+                <rect x="30" y="-22" width="12" height="22"/><rect x="74" y="-22" width="12" height="22"/><rect x="118" y="-22" width="12" height="22"/>
+                <rect x="30" y="180" width="12" height="22"/><rect x="74" y="180" width="12" height="22"/><rect x="118" y="180" width="12" height="22"/>
+                <rect x="-22" y="30" width="22" height="12"/><rect x="-22" y="84" width="22" height="12"/><rect x="-22" y="138" width="22" height="12"/>
+                <rect x="160" y="30" width="22" height="12"/><rect x="160" y="84" width="22" height="12"/><rect x="160" y="138" width="22" height="12"/>
+              </g>
+              <rect width="160" height="180" fill="#1d1d1d" stroke="#454545" stroke-width="4"/>
+              <rect id="s9-hr" x="24" y="24" width="56" height="132" fill="#ff4136"/>
+              <rect id="s9-hg" x="80" y="24" width="56" height="132" fill="#34d973"/>
+            </svg>
+            <div class="word" style="font-size:210px;position:relative;"><span class="m ltr" id="s9-mort">MORT</span><span class="g ltr" id="s9-gpuw">GPU</span><div id="s9-rim" style="position:absolute;left:6px;right:6px;bottom:-34px;height:8px;background:linear-gradient(90deg,var(--red),var(--green));transform-origin:left center;"></div></div>
+          </div>
+          <div style="position:absolute;left:0;width:1920px;top:660px;text-align:center;font-size:56px;font-weight:700;">
+            <span id="s9-t1" class="ltr">save together,</span> <span id="s9-t2" class="ltr green">own your compute.</span>
+          </div>
+          <div id="s9-cr" class="mono" style="position:absolute;left:0;width:1920px;top:830px;text-align:center;font-size:20px;letter-spacing:0.16em;color:var(--muted);">STRIPE TEST MODE · COGNEE MEMORY · LLM AGENT + policy.json · github.com/azidancorp/MORTGPU</div>
+        </div>
+      </section>
+
+      <!-- ===================== pipeline strip 37.04–99.11 ===================== -->
+      <div id="pipe" class="clip" data-start="37.04" data-duration="62.07" data-track-index="3">
+        <div id="pipe-in">
+          <div class="ps" id="ps0"><i class="gl"></i><i class="rl"></i><span>PROPOSE</span></div><div class="pa"></div>
+          <div class="ps" id="ps1"><i class="gl"></i><i class="rl"></i><span>GATE</span></div><div class="pa"></div>
+          <div class="ps" id="ps2"><i class="gl"></i><i class="rl"></i><span>STRIPE</span></div><div class="pa"></div>
+          <div class="ps" id="ps3"><i class="gl"></i><i class="rl"></i><span>COGNEE</span></div><div class="pa"></div>
+          <div class="ps" id="ps4"><i class="gl"></i><i class="rl"></i><span>LEDGER</span></div>
+        </div>
+      </div>
+
+      <!-- ===================== wipe line (scene cuts) ===================== -->
+      <div id="wipe" class="clip" data-start="0" data-duration="118" data-track-index="4">
+        <div id="wipe-line"></div>
+      </div>
+
+      <!-- ===================== voiceover ===================== -->
+      <audio id="vo0" src="assets/audio/vo_00.mp3" data-start="0.5" data-duration="6.452" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo1" src="assets/audio/vo_01.mp3" data-start="7.4" data-duration="14.341" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo2" src="assets/audio/vo_02.mp3" data-start="22.19" data-duration="14.393" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo3" src="assets/audio/vo_03.mp3" data-start="37.04" data-duration="16.822" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo4" src="assets/audio/vo_04.mp3" data-start="54.31" data-duration="9.012" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo5" src="assets/audio/vo_05.mp3" data-start="63.77" data-duration="4.571" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo6" src="assets/audio/vo_06.mp3" data-start="68.79" data-duration="20.401" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo7" src="assets/audio/vo_07.mp3" data-start="89.65" data-duration="9.012" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo8" src="assets/audio/vo_08.mp3" data-start="99.11" data-duration="16.352" data-track-index="10" data-volume="1"></audio>
+    </div>
+
+    <script>
+      // ---------- deterministic DOM builders (run before the timeline) ----------
+      function grid(id, n, cols, cell, gap) {
+        const host = document.getElementById(id), out = [];
+        for (let i = 0; i < n; i++) {
+          const c = document.createElement("div");
+          c.className = "cell";
+          c.style.left = (i % cols) * (cell + gap) + "px";
+          c.style.top = Math.floor(i / cols) * (cell + gap) + "px";
+          c.style.width = c.style.height = cell + "px";
+          host.appendChild(c); out.push(c);
+        }
+        return out;
+      }
+      const g3 = grid("s3-grid", 100, 10, 26, 4);
+      const g5 = grid("s5-grid", 100, 10, 26, 4);
+      const g6 = grid("s6-cells", 4, 4, 56, 10);
+      // fill order: bottom rows first
+      const bottomUp = (cells) => cells.slice().reverse();
+      // pool coins
+      const coins = [];
+      (function () {
+        const host = document.getElementById("s1-coins");
+        const xs = [64, 156, 248, 340, 432];
+        for (let r = 0; r < 4; r++) for (let k = 0; k < 5; k++) {
+          const c = document.createElement("div");
+          c.className = "coin"; c.style.left = xs[k] + "px"; c.style.top = "130px";
+          document.getElementById("s1-pool").appendChild(c); coins.push(c);
+        }
+      })();
+      // usage particles + histogram
+      const pts = [];
+      for (let i = 0; i < 10; i++) { const p = document.createElement("div"); p.className = "pt"; p.style.left = "0px"; p.style.top = "3px"; document.getElementById("s4-stream").appendChild(p); pts.push(p); }
+      const hbs = [];
+      for (let i = 0; i < 30; i++) {
+        const b = document.createElement("div"); b.className = "hb";
+        b.style.left = i * 16 + "px";
+        b.style.height = Math.round(70 + 140 * (0.5 + 0.5 * Math.sin(i * 1.7) * Math.cos(i * 0.6))) + "px";
+        document.getElementById("s4-hist").appendChild(b); hbs.push(b);
+      }
+      // ownership segments (20 × 5%)
+      const segs = [];
+      for (let i = 0; i < 20; i++) { const s = document.createElement("div"); s.className = "seg"; s.style.left = i * 86 + "px"; document.getElementById("s7-segs").appendChild(s); segs.push(s); }
+
+      // ---------- timeline ----------
+      const tl = gsap.timeline({ paused: true });
+      const E = "power3.out";
+      const $ = (s) => document.querySelector(s);
+      const inn = (sel, t, o = {}) => tl.fromTo(sel, { opacity: 0, y: o.y ?? 34, x: o.x ?? 0 }, { opacity: 1, y: 0, x: 0, duration: o.d ?? 0.5, ease: o.ease ?? E, stagger: o.st ?? 0 }, t);
+      const out = (sel, t, d = 0.3) => tl.to(sel, { opacity: 0, y: -16, duration: d, ease: "power2.in" }, t);
+      const money0 = (v) => "£" + Math.round(v).toLocaleString("en-GB");
+      const money2 = (v) => "£" + v.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const int = (v) => Math.round(v).toLocaleString("en-GB");
+      function count(sel, a, b, t, d, f, ease = "power2.out") {
+        const el = $(sel), o = { v: a };
+        tl.to(o, { v: b, duration: d, ease, onUpdate: () => { el.textContent = f(o.v); } }, t);
+      }
+      function stamp(sel, t, rot = -3) {
+        tl.fromTo(sel, { opacity: 0, scale: 2.3, rotation: -14 }, { opacity: 1, scale: 1, rotation: rot, duration: 0.45, ease: "back.out(2.2)" }, t);
+      }
+      function type(sel, t, d) {
+        const el = $(sel), n = el.textContent.length;
+        tl.fromTo(el, { width: "0ch" }, { width: n + "ch", duration: d, ease: "steps(" + n + ")" }, t);
+      }
+      function lit(i, t, red) {
+        const el = document.querySelector("#ps" + i + (red ? " .rl" : " .gl"));
+        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.18, ease: "power2.out", immediateRender: false }, t);
+        tl.to(el, { opacity: 0, duration: 0.6, ease: "power2.in" }, t + 1.1);
+        tl.fromTo("#ps" + i, { color: "#7d7d7d" }, { color: "#e6e6e6", duration: 0.18, immediateRender: false }, t);
+        tl.to("#ps" + i, { color: "#7d7d7d", duration: 0.6 }, t + 1.1);
+      }
+
+      // ---------- background drift (whole film) ----------
+      tl.fromTo("#bg-grid", { x: 0, y: 0 }, { x: 60, y: 60, duration: 118, ease: "none" }, 0);
+      tl.fromTo("#glow-r", { x: 0, y: 0 }, { x: -260, y: 140, duration: 118, ease: "sine.inOut" }, 0);
+      tl.fromTo("#glow-g", { x: 0, y: 0 }, { x: 320, y: -120, duration: 118, ease: "sine.inOut" }, 0);
+
+      // ---------- wipe line at every cut ----------
+      const cuts = [7.4, 22.19, 37.04, 54.31, 63.77, 68.79, 89.65, 99.11, 110.2];
+      tl.set("#wipe-line", { x: -40 }, 0);
+      cuts.forEach((c) => tl.fromTo("#wipe-line", { x: -40 }, { x: 1960, duration: 0.55, ease: "power2.inOut", immediateRender: false }, c - 0.28));
+
+      // ================= S0 hook =================
+      inn("#s0-gpu", 0.15, { y: 60, d: 0.9 });
+      tl.fromTo("#bladesA", { rotation: 0, svgOrigin: "0 0" }, { rotation: 1440, svgOrigin: "0 0", duration: 7.4, ease: "none" }, 0);
+      tl.fromTo("#bladesB", { rotation: 0, svgOrigin: "0 0" }, { rotation: -1440, svgOrigin: "0 0", duration: 7.4, ease: "none" }, 0);
+      inn("#s0-price", 0.5, { y: 50, d: 0.6 });
+      count("#s0-num", 0, 10000, 0.6, 2.4, (v) => int(v), "power3.out");
+      tl.fromTo("#s0-price", { scale: 1 }, { scale: 1.06, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.out", immediateRender: false }, 3.0);
+      inn("#s0-cap", 1.0, { y: 20 });
+      tl.fromTo("#s0-strike", { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power4.out" }, 4.3);
+      tl.to("#s0-price", { opacity: 0.35, duration: 0.5 }, 4.45);
+      tl.to("#s0-gpu", { y: -40, scale: 0.86, opacity: 0.3, duration: 1.6, ease: "power2.inOut" }, 4.4);
+      tl.fromTo("#s0-oor", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 4.75);
+      out("#s0-st", 7.08);
+
+      // ================= S1 what it is =================
+      // logo sting 7.4 → 11.3
+      tl.fromTo("#s1-chip .pin", { opacity: 0, scale: 0.2, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, stagger: 0.025, ease: "back.out(3)" }, 7.55);
+      tl.fromTo("#s1-hr", { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.5, ease: "power4.out" }, 7.8);
+      tl.fromTo("#s1-hg", { scaleY: 0, transformOrigin: "50% 0%" }, { scaleY: 1, duration: 0.5, ease: "power4.out" }, 7.95);
+      tl.fromTo("#s1-mort", { opacity: 0, y: -120 }, { opacity: 1, y: 0, duration: 0.55, ease: "power4.out" }, 8.0);
+      tl.fromTo("#s1-gpuw", { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 0.55, ease: "power4.out" }, 8.15);
+      tl.fromTo("#s1-rim", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power3.inOut" }, 8.5);
+      inn("#s1-sub", 9.0, { y: 24 });
+      inn("#s1-cap1", 9.2, { y: 20 });
+      tl.to("#s1-logo", { scale: 0.55, y: -160, opacity: 0, duration: 0.5, ease: "power3.in" }, 11.05);
+      out("#s1-sub", 11.0); out("#s1-cap1", 11.0);
+      // pool + queue 11.6 → 22
+      inn("#s1-eb", 11.5, { y: 12 });
+      inn("#s1-pool", 11.55, { x: -60, y: 0, d: 0.6 });
+      inn("#s1-queue", 11.7, { x: 60, y: 0, d: 0.6 });
+      inn("#s1-queue .qrow", 12.0, { y: 20, st: 0.1 });
+      inn("#s1-cap2", 12.0, { y: 20 });
+      tl.fromTo("#s1-fill", { scaleY: 0.04 }, { scaleY: 0.78, duration: 8.5, ease: "power1.inOut" }, 12.0);
+      coins.forEach((c, i) => {
+        const t = 12.1 + Math.floor(i / 5) * 0.95 + (i % 5) * 0.11;
+        tl.fromTo(c, { y: 0, opacity: 0 }, { y: 420 - Math.floor(i / 5) * 60, opacity: 1, duration: 0.55, ease: "power2.in" }, t);
+        tl.to(c, { opacity: 0, duration: 0.15 }, t + 0.55);
+      });
+      tl.fromTo("#qf-priya", { scaleX: 0 }, { scaleX: 0.75, duration: 3.2, ease: "power2.out" }, 12.3);
+      tl.fromTo("#qf-tom", { scaleX: 0 }, { scaleX: 0.7875, duration: 3.2, ease: "power2.out" }, 12.3);
+      tl.fromTo("#qf-amara", { scaleX: 0 }, { scaleX: 1, duration: 3.2, ease: "power2.out" }, 12.3);
+      count("#qc-priya", 0, 600000, 12.3, 3.2, int); count("#qc-tom", 0, 630000, 12.3, 3.2, int); count("#qc-amara", 0, 800000, 12.3, 3.2, int);
+      // sort: amara rises to #1
+      tl.to("#q-amara", { y: -280, duration: 0.8, ease: "power3.inOut" }, 15.9);
+      tl.to("#q-priya", { y: 280, duration: 0.8, ease: "power3.inOut" }, 15.9);
+      tl.fromTo("#q-amara", { backgroundColor: "rgba(52,217,115,0)" }, { backgroundColor: "rgba(52,217,115,0.12)", duration: 0.4, immediateRender: false }, 16.5);
+      tl.fromTo("#qc-amara", { color: "#e6e6e6" }, { color: "#34d973", duration: 0.4, immediateRender: false }, 16.5);
+      tl.fromTo("#s1-next", { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.4, ease: "back.out(2)" }, 17.0);
+      inn("#s1-dep", 19.4, { y: 30 });
+      out("#s1-st", 21.88);
+
+      // ================= S2 control loop =================
+      tl.fromTo("#s2-st .eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 22.3);
+      inn("#s2-title", 22.3, { y: 30, d: 0.45 });
+      tl.fromTo("#s2-hstrike", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power4.out" }, 22.95);
+      tl.to("#s2-human", { color: "#7d7d7d", duration: 0.3 }, 23.0);
+      const nodeT = [23.73, 26.68, 31.85, 33.42, 35.08];
+      nodeT.forEach((t, i) => {
+        inn("#nd" + (i + 1), t, { y: 50, d: 0.5 });
+        if (i > 0) tl.fromTo("#cn" + i, { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: "power2.out" }, t - 0.2);
+      });
+      inn("#nd2 .mini > span", 28.4, { y: 10, st: 0.35, d: 0.3 });
+      stamp("#nd2-c", 30.29, 0);
+      tl.fromTo("#nd2", { borderLeftColor: "#454545" }, { borderLeftColor: "#34d973", duration: 0.2, immediateRender: false }, 28.4);
+      tl.to("#nd2", { borderLeftColor: "#ff4136", duration: 0.2 }, 28.75);
+      // packet travels node to node
+      const nodeX = [252, 602, 952, 1302, 1652];
+      tl.set("#s2-pkt", { x: nodeX[0], opacity: 0 }, 22.19);
+      tl.to("#s2-pkt", { opacity: 1, duration: 0.2 }, 24.4);
+      tl.fromTo("#s2-rail", { opacity: 0, scaleX: 0, transformOrigin: "left center" }, { opacity: 1, scaleX: 1, duration: 1.2, ease: "power2.out" }, 24.2);
+      nodeT.slice(1).forEach((t, i) => tl.to("#s2-pkt", { x: nodeX[i + 1], duration: 0.5, ease: "power2.inOut" }, t - 0.4));
+      inn("#s2-cap", 24.0, { y: 20 });
+      tl.to("#s2-flow", { y: 80, scale: 0.9, opacity: 0, duration: 0.4, ease: "power2.in" }, 36.5);
+      tl.set("#s2-flow", { opacity: 0 }, 37.04);
+      out("#s2-title", 36.6); out("#s2-cap", 36.7); out("#s2-st .eyebrow", 36.7);
+
+      // ================= pipeline strip =================
+      inn("#pipe-in", 37.1, { y: 20 });
+      inn("#pipe-in .ps", 37.15, { y: 12, st: 0.06, d: 0.35 });
+      [[0, 37.4], [1, 43.25], [2, 44.8], [3, 45.4], [4, 45.9], [2, 49.4], [4, 52.6],
+       [2, 58.2], [2, 60.3], [1, 62.0], [4, 62.7],
+       [0, 63.9], [1, 64.9], [2, 65.4], [4, 66.3],
+       [0, 70.4], [3, 72.7], [2, 81.6], [4, 84.4], [4, 86.6],
+       [0, 89.8], [1, 90.3], [2, 90.8], [4, 94.5]].forEach(([i, t]) => lit(i, t, false));
+      [[2, 69.0], [1, 77.98]].forEach(([i, t]) => lit(i, t, true));
+      out("#pipe-in", 98.8);
+
+      // ================= S3 contract → bill =================
+      tl.fromTo("#s3-st .eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 37.1);
+      inn("#s3-contract", 37.15, { x: -50, y: 0 });
+      inn("#s3-contract .kv", 37.5, { y: 12, st: 0.12, d: 0.35 });
+      inn("#s3-cap", 37.6, { y: 20 });
+      inn("#s3-eq", 39.0, { y: 40 });
+      bottomUp(g3).slice(0, 20).forEach((c, i) => tl.fromTo(c, { backgroundColor: "#242424", scale: 1 }, { backgroundColor: "#34d973", scale: 1, duration: 0.25, ease: "power2.out" }, 39.6 + i * 0.1));
+      count("#s3-eqn", 0, 20, 39.6, 2.0, (v) => Math.round(v));
+      tl.fromTo("#s3-ar1", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4 }, 42.8);
+      inn("#s3-gh", 42.9, { y: 10 });
+      inn("#s3-gates .gate-row", 43.2, { x: -30, y: 0, st: 0.2, d: 0.35 });
+      stamp("#s3-stamp", 44.3);
+      inn("#s3-sup", 44.8, { y: 30, d: 0.45 });
+      stamp("#s3-paid", 45.4, 0);
+      tl.fromTo("#s3-ar2", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4 }, 46.0);
+      inn("#s3-gpu", 46.3, { x: 50, y: 0 });
+      tl.fromTo("#s3-core", { fill: "#2e2e2e" }, { fill: "#34d973", duration: 0.3, immediateRender: false }, 47.3);
+      tl.fromTo("#s3-led", { backgroundColor: "#454545", boxShadow: "0 0 0px #34d973" }, { backgroundColor: "#34d973", boxShadow: "0 0 14px #34d973", duration: 0.3, immediateRender: false }, 47.3);
+      tl.to("#s3-st1", { opacity: 0, duration: 0.2 }, 47.3);
+      tl.fromTo("#s3-st2", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 47.4);
+      tl.fromTo("#s3-gpu", { boxShadow: "0 0 0px rgba(52,217,115,0)" }, { boxShadow: "0 0 60px rgba(52,217,115,0.35)", duration: 0.4, yoyo: true, repeat: 1, immediateRender: false }, 47.3);
+      inn("#s3-sub", 49.3, { y: 40 });
+      count("#s3-rent", 0, 400, 50.3, 1.4, (v) => money2(v).replace(".00", ".00"));
+      inn("#s3-split .lbl", 52.4, { y: 10 });
+      inn("#s3-split .split-row", 52.55, { x: -30, y: 0, st: 0.15, d: 0.35 });
+      tl.fromTo("#s3-split .split-row .bar", { scaleX: 0 }, { scaleX: 1, duration: 0.6, stagger: 0.15, ease: "power3.out" }, 52.7);
+      out("#s3-st", 54.0);
+
+      // ================= S4 usage =================
+      tl.fromTo("#s4-st .eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 54.4);
+      inn("#s4-nova", 54.4, { x: -50, y: 0 });
+      inn("#s4-gpu", 54.6, { x: 50, y: 0 });
+      inn("#s4-cap", 54.8, { y: 20 });
+      pts.forEach((p, i) => tl.fromTo(p, { x: 0, opacity: 0 }, { x: 386, opacity: 1, duration: 0.7, ease: "none", repeat: 8, delay: 0, immediateRender: false }, 54.9 + i * 0.07));
+      tl.to(pts, { opacity: 0, duration: 0.3 }, 61.4);
+      inn("#s4-meter", 54.9, { y: 30 });
+      count("#s4-min", 0, 30000, 55.1, 3.0, int, "power1.inOut");
+      tl.fromTo(hbs, { scaleY: 0 }, { scaleY: 1, duration: 0.3, stagger: 0.09, ease: "power2.out" }, 55.1);
+      inn("#s4-inv", 59.8, { x: 50, y: 0 });
+      count("#s4-amt", 0, 1200, 60.2, 1.0, money2);
+      stamp("#s4-paid", 61.2, -4);
+      inn("#s4-icr", 61.7, { y: 40, d: 0.4 });
+      tl.fromTo("#s4-gfill", { scaleX: 0 }, { scaleX: 300 / 350, duration: 1.0, ease: "power3.out" }, 62.0);
+      count("#s4-icrn", 0, 300, 62.0, 1.0, (v) => Math.round(v), "power3.out");
+      inn("#s4-3x", 62.6, { x: -20, y: 0, d: 0.3 });
+      out("#s4-st", 63.45);
+
+      // ================= S5 buy-back =================
+      tl.fromTo("#s5-st .eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 63.85);
+      inn("#s5-mail", 63.85, { x: -50, y: 0, d: 0.45 });
+      inn("#s5-cap", 64.0, { y: 20 });
+      stamp("#s5-stamp", 64.75);
+      inn("#s5-pi", 65.1, { y: 30, d: 0.4 });
+      inn("#s5-eq", 64.9, { x: 50, y: 0, d: 0.45 });
+      bottomUp(g5).slice(0, 20).forEach((c) => tl.set(c, { backgroundColor: "#34d973" }, 63.77));
+      bottomUp(g5).slice(20, 30).forEach((c, i) => tl.fromTo(c, { backgroundColor: "#242424" }, { backgroundColor: "#55ec8f", duration: 0.2, immediateRender: false }, 65.4 + i * 0.07));
+      count("#s5-eqn", 20, 30, 65.4, 0.8, (v) => Math.round(v));
+      tl.fromTo("#s5-strk", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 66.3);
+      tl.fromTo("#s5-new", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(2)" }, 66.6);
+      out("#s5-st", 68.48);
+
+      // ================= S6 enforcement =================
+      tl.fromTo("#s6-st .eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 68.85);
+      inn("#s6-inv", 68.85, { x: -50, y: 0, d: 0.4 });
+      tl.to("#s6-open", { opacity: 0, duration: 0.1 }, 69.45);
+      tl.fromTo("#s6-fail", { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2.5)" }, 69.45);
+      tl.fromTo("#s6-inv", { x: 0 }, { keyframes: { x: [0, -14, 12, -8, 5, 0] }, duration: 0.45, immediateRender: false }, 69.5);
+      tl.fromTo("#s6-inv", { boxShadow: "0 0 0px rgba(255,65,54,0)" }, { boxShadow: "0 0 70px rgba(255,65,54,0.35)", duration: 0.4, immediateRender: false }, 69.5);
+      inn("#s6-mail", 70.35, { y: 40, d: 0.45 });
+      inn("#s6-cap1", 70.6, { y: 20 });
+      inn("#s6-mem", 72.6, { x: 60, y: 0, d: 0.5 });
+      type("#s6-q", 73.0, 1.3);
+      inn("#s6-m1", 74.35, { y: 24, d: 0.4 });
+      inn("#s6-m2", 76.1, { y: 24, d: 0.4 });
+      inn("#s6-facts", 77.0, { y: 10, d: 0.3 });
+      // BLOCK moment
+      tl.fromTo("#s6-dim", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 77.9);
+      tl.fromTo("#redflash", { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false }, 77.98);
+      tl.to("#redflash", { opacity: 0.35, duration: 1.2, ease: "power2.out" }, 78.2);
+      tl.to("#redflash", { opacity: 0, duration: 0.8 }, 88.6);
+      stamp("#s6-stamp", 77.98, -3);
+      tl.fromTo("#s6-st", { x: 0 }, { keyframes: { x: [0, -18, 14, -9, 5, 0] }, duration: 0.4, immediateRender: false }, 78.2);
+      out("#s6-cap1", 78.0, 0.2);
+      inn("#s6-clause", 79.0, { y: 20 });
+      inn("#s6-cap2", 79.2, { y: 20 });
+      // consequences
+      tl.to("#s6-p1", { opacity: 0, duration: 0.3 }, 81.1);
+      tl.to("#s6-dim", { opacity: 0, duration: 0.4 }, 81.2);
+      tl.to("#s6-stamp", { y: -195, x: 0, scale: 0.62, duration: 0.6, ease: "power3.inOut" }, 81.0);
+      tl.to("#s6-clause", { y: -270, scale: 0.8, opacity: 0.85, duration: 0.6, ease: "power3.inOut" }, 81.0);
+      g6.forEach((c) => tl.set(c, { backgroundColor: "#ff4136" }, 68.79));
+      inn("#s6-c1", 81.45, { y: 50, d: 0.45 });
+      g6.slice().reverse().forEach((c, i) => tl.to(c, { backgroundColor: "#242424", scaleY: 0.25, duration: 0.3, ease: "power2.in" }, 82.3 + i * 0.3));
+      count("#s6-eqn", 4, 0, 82.3, 1.2, (v) => Math.round(v), "none");
+      inn("#s6-c2", 84.3, { y: 50, d: 0.45 });
+      count("#s6-wo", 0, 80, 84.6, 0.9, money0);
+      inn("#s6-c3", 86.45, { y: 50, d: 0.45 });
+      tl.fromTo("#s6-403", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2.4)" }, 87.3);
+      tl.fromTo("#s6-rel", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 88.0);
+      tl.to("#s6-gname", { opacity: 0.35, duration: 0.5 }, 88.0);
+      out("#s6-st", 89.33);
+
+      // ================= S7 payoff =================
+      tl.fromTo("#s7-st .eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 89.7);
+      inn("#s7-pay", 89.7, { x: -50, y: 0, d: 0.45 });
+      stamp("#s7-stamp", 90.3);
+      inn("#s7-cap", 90.0, { y: 20 });
+      inn("#s7-own", 91.0, { y: 30 });
+      inn(segs.slice(0, 19), 91.1, { y: 16, st: 0.025, d: 0.3 });
+      tl.set(segs[19], { background: "#2e2e2e" }, 89.65);
+      tl.fromTo(segs[19], { opacity: 0 }, { opacity: 1, duration: 0.2 }, 91.6);
+      tl.to(segs[19], { background: "linear-gradient(180deg, #55ec8f 0%, #34d973 55%, #23b357 100%)", duration: 0.3 }, 92.7);
+      tl.fromTo(segs[19], { scaleY: 1 }, { scaleY: 1.35, duration: 0.18, yoyo: true, repeat: 1, immediateRender: false }, 92.7);
+      count("#s7-pct", 95, 100, 92.7, 0.5, (v) => Math.round(v));
+      tl.fromTo("#s7-segs", { boxShadow: "0 0 0px rgba(52,217,115,0)" }, { boxShadow: "0 0 80px rgba(52,217,115,0.45)", duration: 0.5, immediateRender: false }, 92.9);
+      inn("#s7-title", 94.4, { y: 40, d: 0.5 });
+      inn("#s7-term", 95.9, { y: 40, d: 0.45 });
+      type("#s7-cmd", 96.3, 0.9);
+      tl.fromTo("#s7-409", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.45, ease: "back.out(3)" }, 97.3);
+      inn("#s7-409b", 97.7, { y: 10, d: 0.3 });
+      out("#s7-st", 98.8);
+
+      // ================= S8 explain =================
+      tl.fromTo("#s8-st .eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 99.15);
+      inn("#s8-term", 99.15, { y: 40, d: 0.45 });
+      type("#s8-q", 99.5, 1.5);
+      inn("#s8-al", 101.6, { y: 10, d: 0.3 });
+      inn("#s8-term .ans", 101.9, { x: -30, y: 0, st: 0.6, d: 0.4 });
+      tl.fromTo("#s8-term .cl", { scale: 1.4 }, { scale: 1, duration: 0.35, stagger: 0.6, ease: "back.out(2)", immediateRender: false }, 101.9);
+      inn("#s8-md", 105.6, { x: 50, y: 0, d: 0.45 });
+      inn("#s8-md .mono > div", 105.9, { y: 10, st: 0.2, d: 0.3 });
+      inn("#s8-cap", 106.0, { y: 20 });
+      inn("#s8-eq .eqp", 108.2, { y: 30, st: 0.12, d: 0.35 });
+      tl.fromTo("#s8-eq .tick", { scale: 2 }, { scale: 1, duration: 0.4, ease: "back.out(3)", immediateRender: false }, 109.0);
+      out("#s8-st", 109.9);
+
+      // ================= S9 close =================
+      tl.fromTo("#s9-chip", { opacity: 0, scale: 0.6, rotation: -20 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.6, ease: "back.out(2)" }, 110.3);
+      tl.fromTo("#s9-hr", { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.5, ease: "power4.out" }, 110.5);
+      tl.fromTo("#s9-hg", { scaleY: 0, transformOrigin: "50% 0%" }, { scaleY: 1, duration: 0.5, ease: "power4.out" }, 110.65);
+      tl.fromTo("#s9-mort", { opacity: 0, y: -120 }, { opacity: 1, y: 0, duration: 0.55, ease: "power4.out" }, 110.45);
+      tl.fromTo("#s9-gpuw", { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 0.55, ease: "power4.out" }, 110.6);
+      tl.fromTo("#s9-rim", { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: "power3.inOut" }, 111.0);
+      tl.fromTo("#s9-t1", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 112.5);
+      tl.fromTo("#s9-t2", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 114.05);
+      tl.fromTo("#s9-cr", { opacity: 0 }, { opacity: 1, duration: 0.6 }, 114.8);
+      tl.fromTo("#s9-logo", { scale: 1 }, { scale: 1.04, duration: 7, ease: "sine.inOut", immediateRender: false }, 111.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
