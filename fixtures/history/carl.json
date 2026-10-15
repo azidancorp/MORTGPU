@@ -1,0 +1,18 @@
+{
+  "member_id": "carl",
+  "lease_id": "L-CARL",
+  "events": [
+    {"date": "2026-01-10", "kind": "lease_opened", "permille_delta": 0,
+     "text": "January 2026: Carl Novak's lease L-CARL on GPU-003 opened with a 20% deposit (200‰ equity) at the locked price of £10,000 (§1.2)."},
+    {"date": "2026-07-01", "kind": "holiday_granted", "clause": "4.2",
+     "promise": {"kind": "holiday", "due_at": "2026-08-31", "status": "broken",
+                 "text": "Carl promised to pay double rent in August in return for skipping July."},
+     "text": "July 2026: Carl was granted a payment holiday (§4.2). Carl promised to pay double rent in August."},
+    {"date": "2026-08-31", "kind": "promise_broken", "clause": "4.3", "permille_delta": 80,
+     "text": "August 2026: Carl did not pay. His promise to pay double was broken. Equity repossessed under §4.3."},
+    {"date": "2026-09-30", "kind": "missed_payment", "clause": "4.3", "permille_delta": 80,
+     "text": "September 2026: Carl missed rent again. Equity repossessed under §4.3."},
+    {"date": "2026-10-15", "kind": "status",
+     "text": "October 2026: Carl holds 4.0% equity (40‰) in GPU-003; rent is £480.00/month."}
+  ]
+}

@@ -1,0 +1,12 @@
+[
+  {"id": "amara", "name": "Amara Okafor", "email": "amara@example.com", "credits_reset_at": null,
+   "contributions": [{"contributed_at": "2025-09-10", "amount_pence": 200000}]},
+  {"id": "priya", "name": "Priya Shah", "email": "priya@example.com", "credits_reset_at": null,
+   "contributions": [{"contributed_at": "2026-08-16", "amount_pence": 1000000}]},
+  {"id": "tom", "name": "Tom Reid", "email": "tom@example.com", "credits_reset_at": null,
+   "contributions": [{"contributed_at": "2026-07-17", "amount_pence": 700000}]},
+  {"id": "ben", "name": "Ben Hartley", "email": "ben@example.com", "credits_reset_at": "2026-04-01",
+   "contributions": [{"contributed_at": "2026-04-01", "amount_pence": 120000}]},
+  {"id": "carl", "name": "Carl Novak", "email": "carl@example.com", "credits_reset_at": "2026-01-10",
+   "contributions": [{"contributed_at": "2026-05-01", "amount_pence": 50000}]}
+]
